@@ -1,0 +1,184 @@
+import algoliasearch, { SearchIndex } from 'algoliasearch';
+import { createFetchRequester } from '@algolia/requester-fetch';
+
+import { Entry, User } from '../util/types';
+
+export class AlgoliaClient {
+	public indices: {
+		entriesIndex: SearchIndex;
+		usersIndex: SearchIndex;
+		passwordlessIndex: SearchIndex;
+		likesIndex: SearchIndex;
+		likeCountReplicaIndex: SearchIndex;
+		ratingReplicaIndex: SearchIndex;
+		timestampReplicaDesc: SearchIndex;
+		timestampReplicaAsc: SearchIndex;
+	};
+
+	constructor(env: Env) {
+		const client = algoliasearch(env.ALGOLIA_APP_ID, env.ALGOLIA_ADMIN_API_KEY, {
+			requester: createFetchRequester(),
+		});
+		const appDomain = env.APP_URL.replace('https://', '');
+
+		this.indices = {
+			entriesIndex: client.initIndex(`${appDomain}:entries`),
+			usersIndex: client.initIndex(`${appDomain}:users`),
+			passwordlessIndex: client.initIndex(`${appDomain}:pwdless`),
+			likesIndex: client.initIndex(`${appDomain}:likes`),
+			likeCountReplicaIndex: client.initIndex(`${appDomain}:entries_likes_desc`),
+			ratingReplicaIndex: client.initIndex(`${appDomain}:entries_rating_desc`),
+			timestampReplicaDesc: client.initIndex(`${appDomain}:entries_timestamp_desc`),
+			timestampReplicaAsc: client.initIndex(`${appDomain}:entries_timestamp_asc`),
+		};
+	}
+
+	async partialUpdateObject(obj: any) {
+		return new Promise((resolve, reject) => {
+			this.indices.entriesIndex.partialUpdateObject(obj, (err: any, content: any) => {
+				if (err) {
+					return reject(err);
+				}
+
+				resolve(content);
+			});
+		});
+	}
+
+	async saveEntry(entry: Entry) {
+		return this.indices.entriesIndex.saveObject(entry);
+	}
+
+	async getUser(id: string): Promise<User> {
+		return this.indices.usersIndex.getObject(id);
+	}
+
+	async getEntry(id: string): Promise<Entry> {
+		return this.indices.entriesIndex.getObject(id);
+	}
+
+	async deleteEntry(id: string) {
+		return this.indices.entriesIndex.deleteObject(id);
+	}
+
+	async getEntryByCode(code: string) {
+		const res = await this.indices.entriesIndex.search('', {
+			filters: `code:${code}`,
+		});
+		const [entry]: unknown[] = res.hits;
+		return entry as Entry;
+	}
+
+	async getByUsernameOrEmailOrPublicKey(username: string, email: string, publicKey?: string) {
+		const res = await this.indices.usersIndex.search<User>('', {
+			filters: `username:${username} OR email:${email} ${publicKey ? 'OR publicKey:' + publicKey : ''}`,
+		});
+		const [user] = res.hits;
+		return user;
+	}
+
+	async getByUsernameOrEmailExcludingId(username: string, email: string, id: string) {
+		const res = await this.indices.usersIndex.search<User>('', {
+			filters: `(username:${username} OR email:${email}) AND NOT objectID:"${id}"`,
+		});
+		const [user] = res.hits;
+		return user;
+	}
+
+	async getUserByEmail(email: string) {
+		const res = await this.indices.usersIndex.search('', {
+			filters: `email:${email}`,
+		});
+		const [user] = res.hits;
+		return user as User;
+	}
+
+	async getUserByPublicKey(publicKey: string) {
+		const res = await this.indices.usersIndex.search('', {
+			filters: `publicKey:${publicKey}`,
+		});
+		if (res.hits.length === 0) {
+			throw 'User not found';
+		}
+		const [user] = res.hits;
+		return user as User;
+	}
+
+	async saveUser(user: User) {
+		return this.indices.usersIndex.saveObject(user);
+	}
+
+	async likeMulti(userId: string, entryId: string) {
+		const { likeCount } = await this.getEntry(entryId);
+		const likeCountNumber = likeCount ? likeCount + 1 : 1;
+
+		try {
+			await Promise.all([
+				this.indices.likesIndex.saveObject({
+					objectID: `user${userId}entry${entryId}`,
+					likeCount: likeCountNumber ? likeCountNumber : 0,
+					entryId: entryId,
+					userId: userId,
+				}),
+				this.indices.likesIndex.saveObject({
+					objectID: `entry${entryId}user${userId}`,
+					likeCount: likeCountNumber ? likeCountNumber : 0,
+					entryId: entryId,
+					userId: userId,
+				}),
+				this.indices.entriesIndex.partialUpdateObject({
+					objectID: entryId,
+					likeCount: {
+						_operation: 'Increment',
+						value: 1,
+					},
+				}),
+			]);
+			return true;
+		} catch (e) {
+			console.log(e);
+			return false;
+		}
+	}
+
+	async unlikeMulti(userId: string, entryId: string) {
+		try {
+			await Promise.all([
+				this.indices.likesIndex.deleteObject(`user${userId}entry${entryId}`),
+				this.indices.likesIndex.deleteObject(`entry${entryId}user${userId}`),
+				this.indices.entriesIndex.partialUpdateObject({
+					objectID: entryId,
+					likeCount: {
+						_operation: 'Decrement',
+						value: 1,
+					},
+				}),
+			]);
+			return true;
+		} catch (e) {
+			return false;
+		}
+	}
+
+	async getUsersLikesWithEntryId(entryId: string) {
+		const prefix = 'user';
+		const likes = await this.indices.likesIndex.search(`entry${entryId}`);
+		const users = await this.indices.usersIndex.getObjects(
+			likes.hits.map(({ objectID }) => objectID.substring(objectID.lastIndexOf(prefix) + prefix.length))
+		);
+		return users.results as User[];
+	}
+
+	async getEntriesLikesWithUserId(userId: string) {
+		const prefix = 'entry';
+		const likes = await this.indices.likesIndex.search(`user${userId}`);
+		const objectIDs = likes.hits.map(({ objectID }) => objectID.substring(objectID.lastIndexOf(prefix) + prefix.length));
+		const entries = await this.indices.entriesIndex.getObjects(objectIDs);
+
+		return entries.results as unknown as Entry[];
+	}
+
+	async updateUser(user: User) {
+		return this.indices.usersIndex.partialUpdateObject(user);
+	}
+}
