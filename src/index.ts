@@ -27,8 +27,14 @@ export default {
 		// Set CORS headers
 		response.headers.set('Access-Control-Allow-Origin', '*'); // Allow all origins
 		response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Specify allowed methods
-		response.headers.set('Access-Control-Allow-Headers', '*'); // Allow all headers
-		response.headers.set('Access-Control-Max-Age', '86400'); // Cache preflight request for 24 hours
+		response.headers.set('Access-Control-Allow-Headers', '*');
+
+		// Handle preflight requests
+		if (request.method === 'OPTIONS') {
+			return new Response(null, {
+				headers: response.headers,
+			});
+		}
 
 		return response;
 	},

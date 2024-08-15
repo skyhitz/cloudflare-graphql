@@ -33,16 +33,8 @@ export class AlgoliaClient {
 		};
 	}
 
-	async partialUpdateObject(obj: any) {
-		return new Promise((resolve, reject) => {
-			this.indices.entriesIndex.partialUpdateObject(obj, (err: any, content: any) => {
-				if (err) {
-					return reject(err);
-				}
-
-				resolve(content);
-			});
-		});
+	async partialUpdateEntry(obj: any) {
+		return this.indices.entriesIndex.partialUpdateObject(obj).wait();
 	}
 
 	async saveEntry(entry: Entry) {
@@ -55,6 +47,25 @@ export class AlgoliaClient {
 
 	async getEntry(id: string): Promise<Entry> {
 		return this.indices.entriesIndex.getObject(id);
+	}
+
+	async getAllEntries(): Promise<Entry[]> {
+		const hitsPerPage = 1000; // Adjust based on your needs
+		let allEntries: Entry[] = [];
+		let page = 0;
+		let hasMore = true;
+
+		while (hasMore) {
+			const res = await this.indices.entriesIndex.search('', {
+				hitsPerPage,
+				page,
+			});
+			allEntries = allEntries.concat(res.hits as Entry[]);
+			hasMore = res.hits.length === hitsPerPage;
+			page++;
+		}
+
+		return allEntries;
 	}
 
 	async deleteEntry(id: string) {

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Keypair, Asset, TransactionBuilder, Operation, Account, Networks, Transaction, StrKey, xdr } from 'stellar-base';
+import { Keypair, Asset, TransactionBuilder, Operation, Account, Networks, Transaction, StrKey, xdr } from '@stellar/stellar-sdk';
 
 const XLM = Asset.native();
 

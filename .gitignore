@@ -170,3 +170,8 @@ dist
 
 .dev.vars
 .wrangler/
+
+contract/target
+contract/.vars
+contract/.soroban/
+contract/client/

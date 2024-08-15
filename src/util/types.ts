@@ -32,6 +32,10 @@ export type Entry = {
 	contract: string;
 	tokenId: string;
 	network: string;
+	tvl?: number;
+	apr?: number;
+	escrow?: number;
+	shares?: Map<string, number>;
 };
 
 export type HiddenBid = {

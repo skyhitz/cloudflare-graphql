@@ -1,6 +1,6 @@
 export const Schema = `
 type Query {
-  entry(id: String!): EntryDetails!
+  entry(id: String!, bypassCache: Boolean): EntryDetails!
   entryLikes(id: String!): EntryLikes!
   userCredits: Float!
   userEntries(userId: String!): [Entry!]!
@@ -15,7 +15,7 @@ type Mutation {
     username: String!
     signedXDR: String
   ): ConditionalUser!
-  investEntry(id: String!, amount: Float!, price: Float!): ConditionalXDR!
+  investEntry(id: String!, amount: Float!): ConditionalXDR!
   likeEntry(id: String!, like: Boolean!): Boolean!
   processEntry(
     contract: String!
@@ -37,6 +37,13 @@ type Mutation {
     instagram: String
   ): User!
   withdrawToExternalWallet(address: String!, amount: Int!): Boolean!
+  syncEntries: SyncEntriesResult!
+}
+
+type SyncEntriesResult {
+  success: Boolean!
+  message: String!
+  entries: [Entry!]!
 }
 
 type decentralizeMetaRes {
@@ -111,6 +118,9 @@ type EntryDetails {
   issuer: String!
   holders: [EntryHolder!]
   history: [EntryActivity!]
+  tvl: Float
+	apr: Float
+	escrow: Float
 }
 
 type EntryHolder {

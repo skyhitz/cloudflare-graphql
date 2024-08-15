@@ -10,8 +10,8 @@ class Mailer {
 		return this.sendMail(email, '¡You just sold a music NFT!', 'd-6687be08e2934811b986c23132b548c1');
 	}
 
-	sendNftBoughtEmail(email: string) {
-		return this.sendMail(email, '¡Now you own a music NFT!', 'd-0d6857da22a54950b1350666181393da');
+	sendNftInvestEmail(email: string) {
+		return this.sendMail(email, '¡You just invested in a music NFT!', 'd-0d6857da22a54950b1350666181393da');
 	}
 
 	sendWelcomeEmail(email: string) {

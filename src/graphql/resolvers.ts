@@ -14,6 +14,7 @@ import { likeEntryResolver } from './like-entry';
 import { removeEntryResolver } from './remove-entry';
 import { withdrawToExternalAddressResolver } from './withdraw-to-external-wallet';
 import { processEntryResolver } from './process-entry';
+import { syncEntriesResolver } from './sync-entries';
 
 const Query = {
 	entry: entryByIdResolver,
@@ -33,6 +34,7 @@ const Mutation = {
 	requestToken: requestTokenResolver,
 	setLastPlayedEntry: setLastPlayedEntryResolver,
 	signInWithToken: signInWithTokenResolver,
+	syncEntries: syncEntriesResolver,
 	updateUser: updateUserResolver,
 	withdrawToExternalWallet: withdrawToExternalAddressResolver,
 };
