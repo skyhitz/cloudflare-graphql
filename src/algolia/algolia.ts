@@ -1,7 +1,7 @@
 import algoliasearch, { SearchIndex } from 'algoliasearch';
 import { createFetchRequester } from '@algolia/requester-fetch';
 
-import { Entry, User } from '../util/types';
+import { Entry, Share, User } from '../util/types';
 
 export class AlgoliaClient {
 	public indices: {
@@ -10,6 +10,8 @@ export class AlgoliaClient {
 		passwordlessIndex: SearchIndex;
 		likesIndex: SearchIndex;
 		likeCountReplicaIndex: SearchIndex;
+		sharesIndex: SearchIndex;
+		submitIndex: SearchIndex;
 		ratingReplicaIndex: SearchIndex;
 		timestampReplicaDesc: SearchIndex;
 		timestampReplicaAsc: SearchIndex;
@@ -27,6 +29,8 @@ export class AlgoliaClient {
 			passwordlessIndex: client.initIndex(`${appDomain}:pwdless`),
 			likesIndex: client.initIndex(`${appDomain}:likes`),
 			likeCountReplicaIndex: client.initIndex(`${appDomain}:entries_likes_desc`),
+			sharesIndex: client.initIndex(`${appDomain}:shares`),
+			submitIndex: client.initIndex(`${appDomain}:submit`),
 			ratingReplicaIndex: client.initIndex(`${appDomain}:entries_rating_desc`),
 			timestampReplicaDesc: client.initIndex(`${appDomain}:entries_timestamp_desc`),
 			timestampReplicaAsc: client.initIndex(`${appDomain}:entries_timestamp_asc`),
@@ -191,5 +195,30 @@ export class AlgoliaClient {
 
 	async updateUser(user: User) {
 		return this.indices.usersIndex.partialUpdateObject(user);
+	}
+
+	async getCollection(userId: string) {
+		const res = await this.indices.sharesIndex.search('', {
+			filters: `userId:${userId}`,
+		});
+		return res.hits as Share[];
+	}
+
+	async getMultiEntries(ids: string[]) {
+		const res = await this.indices.entriesIndex.getObjects(ids);
+		return res.results as Entry[];
+	}
+
+	async updateShares(entryId: string, userId: string, shares: number) {
+		return this.indices.sharesIndex.saveObject({
+			objectID: `entry${entryId}user${userId}`,
+			entryId,
+			userId,
+			shares,
+		});
+	}
+
+	async addToSubmitIndex(email: string, link: string) {
+		return this.indices.submitIndex.saveObject({ objectID: `${email}-${link}`, email: email, link: link });
 	}
 }

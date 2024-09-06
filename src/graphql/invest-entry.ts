@@ -32,14 +32,11 @@ export const investEntryResolver = async (_: any, args: any, context: Context) =
 			apr: sorobanEntry.apr,
 			escrow: sorobanEntry.escrow,
 			objectID: id,
-			shares: sorobanEntry.shares,
 		});
 
-		// set up two new indexes in algolia
-		// user shares
-		// entry shares
-		// update user's invested entries in algolia
-		// update users shares in algolia
+		const shares = (sorobanEntry.shares as any).find((share: any) => share[0] === user?.publicKey)[1];
+
+		await algolia.updateShares(id, user.id, Number(shares));
 	} catch (e) {
 		console.log(e);
 	}

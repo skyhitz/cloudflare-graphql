@@ -38,6 +38,13 @@ export type Entry = {
 	shares?: Map<string, number>;
 };
 
+export type Share = {
+	entryId: string;
+	userId: string;
+	shares: number;
+	objectID: string;
+};
+
 export type HiddenBid = {
 	id: string;
 	hiddenBy: string[];

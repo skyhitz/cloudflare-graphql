@@ -38,6 +38,7 @@ type Mutation {
   ): User!
   withdrawToExternalWallet(address: String!, amount: Int!): Boolean!
   syncEntries: SyncEntriesResult!
+  submitLink(link: String!, email: String!): SubmitLinkResponse!
 }
 
 type SyncEntriesResult {
@@ -182,5 +183,10 @@ type Asset {
   asset_type: String!
   asset_code: String
   asset_issuer: String
+}
+
+type SubmitLinkResponse {
+    message: String!
+    success: Boolean!
 }
 `;

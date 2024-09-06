@@ -18,6 +18,15 @@ class Mailer {
 		return this.sendMail(email, 'Welcome to Skyhitz', 'd-08b9dce0c7d94526aeee9ec06dc1994d');
 	}
 
+	sendEmail({ to, subject, text }: { to: string; subject: string; text: string }) {
+		return sgMail.send({
+			to,
+			from: { email: 'hello@skyhitz.io', name: 'Skyhitz' },
+			subject,
+			text,
+		});
+	}
+
 	async sendLoginEmail(currentUser: User, token: string) {
 		return await sgMail.send({
 			to: currentUser.email,

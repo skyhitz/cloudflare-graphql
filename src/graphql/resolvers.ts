@@ -15,6 +15,7 @@ import { removeEntryResolver } from './remove-entry';
 import { withdrawToExternalAddressResolver } from './withdraw-to-external-wallet';
 import { processEntryResolver } from './process-entry';
 import { syncEntriesResolver } from './sync-entries';
+import { submitLinkResolver } from './submit-link';
 
 const Query = {
 	entry: entryByIdResolver,
@@ -37,6 +38,7 @@ const Mutation = {
 	syncEntries: syncEntriesResolver,
 	updateUser: updateUserResolver,
 	withdrawToExternalWallet: withdrawToExternalAddressResolver,
+	submitLink: submitLinkResolver,
 };
 
 export const resolvers = {
