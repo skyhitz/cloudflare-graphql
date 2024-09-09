@@ -118,7 +118,7 @@ fn get_apr(_: &Env, entry: Entry) -> i128 {
   if entry.tvl == 0 {
       return 0
   } 
-  (entry.escrow * 100 ) / entry.tvl
+  ((entry.escrow - entry.tvl) * 100) / entry.tvl
 }
 
 fn transfer(e: &Env, from: &Address, to: &Address, amount: i128) {
