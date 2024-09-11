@@ -1,5 +1,5 @@
 import { Horizon, Keypair, Transaction, hash, scValToNative, xdr } from '@stellar/stellar-sdk';
-import { Client, Entry, networks } from '../contract/client/src/index';
+import { Client, Entry, networks } from './client';
 
 Horizon.AxiosClient.defaults.adapter = 'fetch';
 

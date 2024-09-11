@@ -17,9 +17,10 @@
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.1.0",
 		"@cloudflare/workers-types": "^4.20240614.0",
+		"@types/node": "^22.5.4",
 		"typescript": "^5.0.4",
 		"vitest": "1.3.0",
-		"wrangler": "^3.71.0"
+		"wrangler": "^3.76.0"
 	},
 	"dependencies": {
 		"@algolia/requester-fetch": "^4.23.3",
@@ -31,7 +32,6 @@
 		"algoliasearch": "^4.23.3",
 		"axios": "https://github.com/alejomendoza/axios",
 		"graphql": "^16.8.2",
-		"stellar-base": "^12.0.1",
 		"yup": "^0.32.11"
 	},
 	"overrides": {

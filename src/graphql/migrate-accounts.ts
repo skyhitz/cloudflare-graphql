@@ -1,4 +1,4 @@
-import { Keypair } from 'stellar-base';
+import { Keypair } from '@stellar/stellar-sdk';
 import { AlgoliaClient } from '../algolia/algolia';
 import { Context } from 'src/util/types';
 import { GraphQLError } from 'graphql';

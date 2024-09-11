@@ -62,6 +62,10 @@ soroban contract bindings typescript \
   --contract-id $(cat ./.vars/$CTR) \
   --overwrite
 
+cp ./client/src/index.ts ./client.ts
+
+rm -rf ./client
+
 soroban contract invoke $ARGS \
   --id $(cat ./.vars/$CTR) \
   -- \

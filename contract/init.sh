@@ -77,5 +77,8 @@ echo Deploy contract $CTR
     --contract-id $(cat ./.vars/$CTR) \
     --overwrite
 
+  cp ./client/src/index.ts ./client.ts
+
+  rm -rf ./client
 cd ../
 
