@@ -197,6 +197,10 @@ export class AlgoliaClient {
 		return this.indices.usersIndex.partialUpdateObject(user);
 	}
 
+	async partialUpdateUser(obj: any) {
+		return this.indices.usersIndex.partialUpdateObject(obj).wait();
+	}
+
 	async getCollection(userId: string) {
 		const res = await this.indices.sharesIndex.search('', {
 			filters: `userId:${userId}`,
