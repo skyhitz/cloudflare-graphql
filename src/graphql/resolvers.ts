@@ -14,7 +14,7 @@ import { likeEntryResolver } from './like-entry';
 import { removeEntryResolver } from './remove-entry';
 import { withdrawToExternalAddressResolver } from './withdraw-to-external-wallet';
 import { processEntryResolver } from './process-entry';
-import { syncEntriesResolver } from './sync-entries';
+import { initContractResolver } from './init-contract';
 import { submitLinkResolver } from './submit-link';
 
 const Query = {
@@ -35,7 +35,7 @@ const Mutation = {
 	requestToken: requestTokenResolver,
 	setLastPlayedEntry: setLastPlayedEntryResolver,
 	signInWithToken: signInWithTokenResolver,
-	syncEntries: syncEntriesResolver,
+	initContract: initContractResolver,
 	updateUser: updateUserResolver,
 	withdrawToExternalWallet: withdrawToExternalAddressResolver,
 	submitLink: submitLinkResolver,

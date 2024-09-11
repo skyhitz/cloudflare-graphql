@@ -1,7 +1,7 @@
 import Mailer from '../sendgrid/sendgrid';
 import { Context } from '../util/types';
 import { requireAuth } from '../auth/auth-context';
-import { getEntry, invest } from '../../contract';
+import ContractClient from '../../contract';
 import Encryption from 'src/util/encryption';
 import { AlgoliaClient } from 'src/algolia/algolia';
 
@@ -13,15 +13,16 @@ export const investEntryResolver = async (_: any, args: any, context: Context) =
 	const encryption = new Encryption(env);
 	const mailer = new Mailer(env);
 	const algolia = new AlgoliaClient(env);
+	const contract = new ContractClient(env);
 	console.log('invest resolver');
 
 	// call invest function from contract
-	const res = await invest(await encryption.decrypt(user.seed), id, amount);
+	const res = await contract.invest(await encryption.decrypt(user.seed), id, amount);
 	console.log('after invest contract');
 
 	// get data from soroban
 
-	const sorobanEntry = await getEntry(id);
+	const sorobanEntry = await contract.getEntry(id);
 
 	console.log('soroban entry', sorobanEntry);
 

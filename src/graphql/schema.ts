@@ -37,11 +37,11 @@ type Mutation {
     instagram: String
   ): User!
   withdrawToExternalWallet(address: String!, amount: Int!): Boolean!
-  syncEntries: SyncEntriesResult!
+  initContract: InitContractResult!
   submitLink(link: String!, email: String!): SubmitLinkResponse!
 }
 
-type SyncEntriesResult {
+type InitContractResult {
   success: Boolean!
   message: String!
   entries: [Entry!]!

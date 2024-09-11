@@ -10,9 +10,9 @@ PATH=./target/bin:$PATH
 
 cd ./contract
 
-if [[ -f "./.vars/$CTR" ]]; then
-  echo "Found existing contract directory; already initialized."
-  exit 0
+if [[ ! -f "./.vars/$CTR" ]]; then
+    echo "Contract directory not found; please initialize first."
+    exit 1
 fi
 
 FRIENDBOT_URL="https://friendbot.stellar.org"
@@ -36,46 +36,39 @@ if [[ "$NETWORK" == "testnet" ]]; then
   curl --silent -X POST "$FRIENDBOT_URL?addr=$ISSUER_ID" >/dev/null
 fi
 
-echo "Using $NETWORK network"
-echo "  RPC URL: $SOROBAN_RPC_URL"
-echo "  Friendbot URL: $FRIENDBOT_URL"
-
-echo Add the $NETWORK network to cli client
 soroban network add \
   --rpc-url "$SOROBAN_RPC_URL" \
   --network-passphrase "$SOROBAN_NETWORK_PASSPHRASE" "$NETWORK"
 
 ARGS="--network $NETWORK --source $ISSUER_SEED"
 
-echo Install dependencies
-
-yarn install
-
-echo Build contracts
-
 soroban contract build 
 
-# echo Deploy the voting contracts
-echo Deploy contract $CTR
-  DEPLOYED_CTR_ID="$(
-    soroban contract deploy $ARGS \
+WASM_ID="$(
+    soroban contract install $ARGS \
       --wasm ./target/wasm32-unknown-unknown/release/skyhitz.wasm
-  )"
-  echo "Contract deployed succesfully with ID: $DEPLOYED_CTR_ID"
-  mkdir -p .vars
-  echo -n "$DEPLOYED_CTR_ID" > .vars/$CTR
+)"
 
-  mkdir -p client
+echo -n "$WASM_ID" > .vars/wasm-id
 
-  # we do not use bindings for now but they're sometimes useful - they contain a lot of code that interacts with blockchain
-  # plus we may switch to using them one day
-  # echo Build Bindings for $CTR
-  soroban contract bindings typescript \
-    --wasm ./target/wasm32-unknown-unknown/release/skyhitz.wasm \
-    --output-dir ./client \
-    --network $NETWORK \
-    --contract-id $(cat ./.vars/$CTR) \
-    --overwrite
+echo "Installed contract with wasm ID $WASM_ID"
 
-cd ../
+mkdir -p client
 
+soroban contract bindings typescript \
+  --wasm ./target/wasm32-unknown-unknown/release/skyhitz.wasm \
+  --output-dir ./client \
+  --network $NETWORK \
+  --contract-id $(cat ./.vars/$CTR) \
+  --overwrite
+
+soroban contract invoke $ARGS \
+  --id $(cat ./.vars/$CTR) \
+  -- \
+  upgrade \
+  --new_wasm_hash $WASM_ID
+
+soroban contract invoke $ARGS \
+  --id $(cat ./.vars/$CTR) \
+  -- \
+  version

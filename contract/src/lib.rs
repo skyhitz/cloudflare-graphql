@@ -1,11 +1,13 @@
 #![no_std]
 
-use soroban_sdk::{contract, contracttype, Map, contractimpl, Env, String, Address, token, log, Vec, vec };
+use soroban_sdk::{contract, contracttype, Map, contractimpl, Env, BytesN, String, Address, token, log, Vec, vec };
 
 #[contracttype]
 pub enum DataKey {
     Index,
     Entries(String),
+    Network,
+    Admin
 }
 
 #[contracttype]
@@ -39,7 +41,22 @@ impl Contract {
         e.storage().instance().get(&key).unwrap()
     }
 
-    pub fn sync_entries(e: Env, ids: Vec<String>) {
+    pub fn version() -> u32 {
+        1
+    }
+
+    pub fn init(e: Env, admin: Address, network: String, ids: Vec<String>) {
+        if e.storage().instance().has(&DataKey::Admin) {
+            panic!("Already initialized");
+        }
+        e.storage().instance().set(&DataKey::Admin, &admin);
+
+        if network == String::from_str(&e, "mainnnet") || network == String::from_str(&e, "testnet") {
+            e.storage().instance().set(&DataKey::Network, &network);
+        } else {
+            panic!("Invalid network");
+        }
+
         let mut index: Vec<String> = e.storage().instance().get(&DataKey::Index).unwrap_or(vec![&e]);
         
         for id in ids {
@@ -64,6 +81,13 @@ impl Contract {
         
         // Update the index in storage
         e.storage().instance().set(&DataKey::Index, &index);
+    }
+
+    pub fn upgrade(e: Env, new_wasm_hash: BytesN<32>) {
+        let admin: Address = e.storage().instance().get(&DataKey::Admin).unwrap();
+        admin.require_auth();
+
+        e.deployer().update_current_contract_wasm(new_wasm_hash);
     }
      
     pub fn invest(e: Env, user: Address, id: String, amount: i128) {
@@ -104,6 +128,8 @@ impl Contract {
     }
 
     pub fn distribute_payouts(e: Env) {
+        let admin: Address = e.storage().instance().get(&DataKey::Admin).unwrap();
+        admin.require_auth();
         let index: Vec<String> = e.storage().instance().get(&DataKey::Index).unwrap_or(vec![&e]);
         for key in index.iter() {
             // Access each entry by key
@@ -112,6 +138,13 @@ impl Contract {
         }
     }
   
+}
+
+fn get_network(e: &Env) -> String {
+    e.storage()
+        .instance()
+        .get(&DataKey::Network)
+        .unwrap_or_else(|| String::from_str(e, "testnet")) 
 }
 
 fn get_apr(_: &Env, entry: Entry) -> i128 {
@@ -127,16 +160,20 @@ fn transfer(e: &Env, from: &Address, to: &Address, amount: i128) {
     client.transfer(from, to, &amount)
 }
 
-fn get_xlm_address(env: &Env) -> Address {
-
-    // futurenet
-    // CB64D3G7SM2RTH6JSGG34DDTFTQ5CFDKVDZJZSODMCX4NJ2HV2KN7OHT
-    // testnet
-    // CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
-    // mainnet
-    // CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA
+fn get_xlm_address(e: &Env) -> Address {
+    let network = get_network(e);
+    let testnet = String::from_str(e, "testnet");
+    let mainnet = String::from_str(e, "mainnet");
     
-    // testnet
-    Address::from_string(&String::from_str(env, "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",))
+    let address_str = if network == testnet {
+        "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"  // testnet
+    } else if network == mainnet {
+        "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA"  // mainnet
+    } else {
+        panic!("Unknown network");  // Add futurenet or other networks if needed
+    };
+
+    // Return the corresponding Address
+    Address::from_string(&String::from_str(e, address_str))
 }
 
