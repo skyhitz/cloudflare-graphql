@@ -7,15 +7,18 @@ class StellarClient {
 	private env: Env;
 	private sourceKeys: Keypair;
 	private NETWORK_PASSPHRASE;
+	private horizonUrl: 'https://horizon-testnet.stellar.org' | 'https://horizon.stellar.org';
+	private transactionFee = '0.06';
 
 	constructor(env: Env) {
 		this.env = env;
 		this.sourceKeys = Keypair.fromSecret(env.ISSUER_SEED);
-		this.NETWORK_PASSPHRASE = env.HORIZON_URL === 'https://horizon.stellar.org' ? Networks.PUBLIC : Networks.TESTNET;
+		this.horizonUrl = env.STELLAR_NETWORK === 'testnet' ? 'https://horizon-testnet.stellar.org' : 'https://horizon.stellar.org';
+		this.NETWORK_PASSPHRASE = env.STELLAR_NETWORK === 'testnet' ? Networks.TESTNET : Networks.PUBLIC;
 	}
 
 	async getAccountData(publicKey: string) {
-		const account = await axios.get(`${this.env.HORIZON_URL}/accounts/${publicKey}`).then(({ data }) => data);
+		const account = await axios.get(`${this.horizonUrl}/accounts/${publicKey}`).then(({ data }) => data);
 		return account;
 	}
 
@@ -109,7 +112,7 @@ class StellarClient {
 		return this.submitTransaction(transaction);
 	}
 
-	async submitTransaction(transaction: Transaction, horizonUrl: string = this.env.HORIZON_URL) {
+	async submitTransaction(transaction: Transaction, horizonUrl: string = this.horizonUrl) {
 		const xdr = transaction.toXDR();
 		console.log('submitted xdr: ', xdr);
 
@@ -124,7 +127,7 @@ class StellarClient {
 			});
 	}
 
-	async getFee(horizonUrl: string = this.env.HORIZON_URL): Promise<string> {
+	async getFee(horizonUrl: string = this.horizonUrl): Promise<string> {
 		return axios
 			.get(horizonUrl + `/fee_stats`)
 			.then(({ data }) => data)
@@ -152,7 +155,7 @@ class StellarClient {
 		const keys = Keypair.fromSecret(seed);
 		const accountPublicKey = keys.publicKey();
 
-		const transactionFee = amount * parseFloat(this.env.TRANSACTION_FEE);
+		const transactionFee = amount * parseFloat(this.transactionFee);
 
 		const transaction = (await this.buildTransactionWithFee(accountPublicKey))
 			.addOperation(

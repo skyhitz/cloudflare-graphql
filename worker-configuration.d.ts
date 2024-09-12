@@ -6,9 +6,7 @@ interface Env {
 	ALGOLIA_APP_ID: string;
 	ENV: string;
 	JWT_SECRET: string;
-	HORIZON_URL: string;
 	ISSUER_SEED: string;
-	TRANSACTION_FEE: string;
 	ALGOLIA_ADMIN_API_KEY: string;
 	SENDGRID_API_KEY: string;
 	STELLAR_NETWORK: string;

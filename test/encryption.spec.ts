@@ -8,8 +8,6 @@ describe('Encryption', () => {
 		ALGOLIA_APP_ID: '',
 		ENV: '',
 		JWT_SECRET: '',
-		HORIZON_URL: '',
-		TRANSACTION_FEE: '',
 		ALGOLIA_ADMIN_API_KEY: '',
 		SENDGRID_API_KEY: '',
 		STELLAR_NETWORK: '',
