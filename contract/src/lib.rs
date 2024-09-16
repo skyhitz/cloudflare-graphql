@@ -51,7 +51,7 @@ impl Contract {
         }
         e.storage().instance().set(&DataKey::Admin, &admin);
 
-        if network == String::from_str(&e, "mainnnet") || network == String::from_str(&e, "testnet") {
+        if network == String::from_str(&e, "public") || network == String::from_str(&e, "testnet") {
             e.storage().instance().set(&DataKey::Network, &network);
         } else {
             panic!("Invalid network");
@@ -163,11 +163,11 @@ fn transfer(e: &Env, from: &Address, to: &Address, amount: i128) {
 fn get_xlm_address(e: &Env) -> Address {
     let network = get_network(e);
     let testnet = String::from_str(e, "testnet");
-    let mainnet = String::from_str(e, "mainnet");
+    let public = String::from_str(e, "public");
     
     let address_str = if network == testnet {
         "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"  // testnet
-    } else if network == mainnet {
+    } else if network == public {
         "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA"  // mainnet
     } else {
         panic!("Unknown network");  // Add futurenet or other networks if needed

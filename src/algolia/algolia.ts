@@ -41,6 +41,10 @@ export class AlgoliaClient {
 		return this.indices.entriesIndex.partialUpdateObject(obj).wait();
 	}
 
+	async partialUpdateUsers(obj: any) {
+		return this.indices.usersIndex.partialUpdateObjects(obj).wait();
+	}
+
 	async saveEntry(entry: Entry) {
 		return this.indices.entriesIndex.saveObject(entry);
 	}

@@ -22,7 +22,7 @@ if [[ "$NETWORK" == "testnet" ]]; then
   SOROBAN_NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
   source ../.dev.vars
 elif [[ "$NETWORK" == "mainnet" ]]; then
-  SOROBAN_RPC_URL="https://soroban.stellar.org:443"
+  SOROBAN_RPC_URL="https://soroban-rpc.mainnet.stellar.gateway.fm:443"
   SOROBAN_NETWORK_PASSPHRASE="Public Global Stellar Network ; September 2015"
 fi
 
@@ -45,7 +45,7 @@ soroban network add \
   --rpc-url "$SOROBAN_RPC_URL" \
   --network-passphrase "$SOROBAN_NETWORK_PASSPHRASE" "$NETWORK"
 
-ARGS="--network $NETWORK --source $ISSUER_SEED"
+ARGS="--network $NETWORK --source $ISSUER_SEED --ignore-checks"
 
 echo Install dependencies
 
