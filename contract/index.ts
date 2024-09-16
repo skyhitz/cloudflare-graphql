@@ -11,7 +11,7 @@ Horizon.AxiosClient.defaults.adapter = 'fetch';
 
 type HorizonUrl = 'https://horizon-testnet.stellar.org' | 'https://horizon.stellar.org';
 type Network = 'testnet' | 'mainnet';
-type RpcUrl = 'https://soroban-testnet.stellar.org' | 'https://soroban.stellar.org';
+type RpcUrl = 'https://soroban-testnet.stellar.org' | 'https://soroban-rpc.mainnet.stellar.gateway.fm';
 
 class ContractClient {
 	private sourceKeys: Keypair;
@@ -25,7 +25,8 @@ class ContractClient {
 		this.sourceKeys = Keypair.fromSecret(env.ISSUER_SEED);
 		this.network = env.STELLAR_NETWORK as Network;
 		this.horizonUrl = env.STELLAR_NETWORK === 'testnet' ? 'https://horizon-testnet.stellar.org' : 'https://horizon.stellar.org';
-		this.rpcUrl = env.STELLAR_NETWORK === 'testnet' ? 'https://soroban-testnet.stellar.org' : 'https://soroban.stellar.org';
+		this.rpcUrl =
+			env.STELLAR_NETWORK === 'testnet' ? 'https://soroban-testnet.stellar.org' : 'https://soroban-rpc.mainnet.stellar.gateway.fm';
 		this.contract = this.getClientForKeypair(this.sourceKeys);
 	}
 
