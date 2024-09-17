@@ -61,9 +61,10 @@ class ContractClient {
 	}
 
 	public distributePayouts = async () => {
-		// get mft issuer with our logic
 		let tx = await this.contract.distribute_payouts();
-		return tx.result;
+
+		const res = await tx.signAndSend();
+		return res;
 	};
 
 	public setEntry = async (entry: Entry) => {

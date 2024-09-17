@@ -85,3 +85,8 @@ export interface Context {
 	user?: User;
 	env: Env;
 }
+
+export type Timestamp = {
+	objectID: string;
+	timestamp: number;
+};

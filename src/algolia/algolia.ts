@@ -1,7 +1,7 @@
 import algoliasearch, { SearchIndex } from 'algoliasearch';
 import { createFetchRequester } from '@algolia/requester-fetch';
 
-import { Entry, Share, User } from '../util/types';
+import { Entry, Share, Timestamp, User } from '../util/types';
 
 export class AlgoliaClient {
 	public indices: {
@@ -15,6 +15,7 @@ export class AlgoliaClient {
 		ratingReplicaIndex: SearchIndex;
 		timestampReplicaDesc: SearchIndex;
 		timestampReplicaAsc: SearchIndex;
+		distributionTimestampsIndex: SearchIndex;
 	};
 
 	constructor(env: Env) {
@@ -34,6 +35,7 @@ export class AlgoliaClient {
 			ratingReplicaIndex: client.initIndex(`${appDomain}:entries_rating_desc`),
 			timestampReplicaDesc: client.initIndex(`${appDomain}:entries_timestamp_desc`),
 			timestampReplicaAsc: client.initIndex(`${appDomain}:entries_timestamp_asc`),
+			distributionTimestampsIndex: client.initIndex(`${appDomain}:distribution_timestamps`),
 		};
 	}
 
@@ -228,5 +230,19 @@ export class AlgoliaClient {
 
 	async addToSubmitIndex(email: string, link: string) {
 		return this.indices.submitIndex.saveObject({ objectID: `${email}-${link}`, email: email, link: link });
+	}
+
+	async getDistributionTimestamp(key: string): Promise<number | null> {
+		try {
+			const obj: Timestamp = await this.indices.distributionTimestampsIndex.getObject(key);
+			if (obj && obj.timestamp) return obj.timestamp;
+		} catch (error: any) {
+			return null;
+		}
+		return null;
+	}
+
+	async setDistributionTimestamp(key: string, value: number): Promise<void> {
+		await this.indices.distributionTimestampsIndex.saveObject({ objectID: key, timestamp: value });
 	}
 }
