@@ -16,7 +16,6 @@ import { withdrawToExternalAddressResolver } from './withdraw-to-external-wallet
 import { processEntryResolver } from './process-entry';
 import { initContractResolver } from './init-contract';
 import { submitLinkResolver } from './submit-link';
-import { migrateAccountsResolver } from './migrate-accounts';
 
 const Query = {
 	entry: entryByIdResolver,
@@ -32,7 +31,6 @@ const Mutation = {
 	initContract: initContractResolver,
 	investEntry: investEntryResolver,
 	likeEntry: likeEntryResolver,
-	migrateAccounts: migrateAccountsResolver,
 	processEntry: processEntryResolver,
 	removeEntry: removeEntryResolver,
 	requestToken: requestTokenResolver,

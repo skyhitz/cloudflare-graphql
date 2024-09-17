@@ -39,7 +39,6 @@ type Mutation {
   withdrawToExternalWallet(address: String!, amount: Int!): Boolean!
   initContract: InitContractResult!
   submitLink(link: String!, email: String!): SubmitLinkResponse!
-  migrateAccounts(accounts:[String!]): Boolean!
 }
 
 type InitContractResult {
