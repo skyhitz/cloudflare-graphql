@@ -45,8 +45,9 @@ export const investEntryResolver = async (_: any, args: any, context: Context) =
 	console.log('partial update finished');
 
 	try {
-		// send email
-		await mailer.sendNftInvestEmail(user.email);
+		if (amount > 3000000) {
+			await mailer.sendNftInvestEmail(user.email);
+		}
 	} catch (e) {
 		console.log(e);
 	}
