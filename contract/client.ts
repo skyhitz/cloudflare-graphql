@@ -31,7 +31,7 @@ if (typeof window !== 'undefined') {
 
 
 export const networks = {
-  mainnet: {
+  unknown: {
     networkPassphrase: "Public Global Stellar Network ; September 2015",
     contractId: "CDCN2D4OF5IHPAHUIF6RPVH654KW6LKTYKYK3IQULBBWURD7L4CDNSRO",
   }

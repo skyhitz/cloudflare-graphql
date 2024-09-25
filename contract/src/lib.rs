@@ -27,22 +27,22 @@ pub struct Contract;
 impl Contract {
     pub fn set_entry(e: Env, entry: Entry) {
         let key = DataKey::Entries(entry.id.clone());
-        e.storage().instance().set(&key, &entry);
+        e.storage().persistent().set(&key, &entry);
 
-        let mut index: Vec<String> = e.storage().instance().get(&DataKey::Index).unwrap_or(vec![&e]);
+        let mut index: Vec<String> = e.storage().persistent().get(&DataKey::Index).unwrap_or(vec![&e]);
         index.push_back(entry.id.clone());
-        e.storage().instance().set(&DataKey::Index, &index);
+        e.storage().persistent().set(&DataKey::Index, &index);
     }
     
 
     pub fn get_entry(e: &Env, id: String) -> Entry {
         let key = DataKey::Entries(id);
 
-        e.storage().instance().get(&key).unwrap()
+        e.storage().persistent().get(&key).unwrap()
     }
 
     pub fn version() -> u32 {
-        1
+        6
     }
 
     pub fn init(e: Env, admin: Address, network: String, ids: Vec<String>) {
@@ -57,7 +57,7 @@ impl Contract {
             panic!("Invalid network");
         }
 
-        let mut index: Vec<String> = e.storage().instance().get(&DataKey::Index).unwrap_or(vec![&e]);
+        let mut index: Vec<String> = e.storage().persistent().get(&DataKey::Index).unwrap_or(vec![&e]);
         
         for id in ids {
             if !index.contains(&id) {
@@ -72,7 +72,7 @@ impl Contract {
                 
                 // Add the new entry to storage
                 let key = DataKey::Entries(id.clone());
-                e.storage().instance().set(&key, &entry);
+                e.storage().persistent().set(&key, &entry);
                 
                 // Append the new entry's ID to the index
                 index.push_back(id);
@@ -80,7 +80,7 @@ impl Contract {
         }
         
         // Update the index in storage
-        e.storage().instance().set(&DataKey::Index, &index);
+        e.storage().persistent().set(&DataKey::Index, &index);
     }
 
     pub fn upgrade(e: Env, new_wasm_hash: BytesN<32>) {
@@ -94,7 +94,7 @@ impl Contract {
         user.require_auth();
         let download_amount = 3000000;
         let key = DataKey::Entries(id.clone());
-        let mut entry: Entry = e.storage().instance().get(&key).unwrap();
+        let mut entry: Entry = e.storage().persistent().get(&key).unwrap();
 
         // Update equity share
         let past_user_equity = entry.shares.get(user.clone()).unwrap_or(0);
@@ -109,19 +109,19 @@ impl Contract {
         entry.apr = get_apr(&e, entry.clone());
 
         // Save updated entry
-        e.storage().instance().set(&key, &entry);
+        e.storage().persistent().set(&key, &entry);
         transfer(&e, &user, &e.current_contract_address(), amount);
     }
 
     pub fn distribute_payout(e: Env, id: String) {
         let key = DataKey::Entries(id.clone());
-        let mut entry: Entry = e.storage().instance().get(&key).unwrap();
+        let mut entry: Entry = e.storage().persistent().get(&key).unwrap();
         for (user, equity) in entry.shares.iter() {
             let user_payout = (entry.escrow / 365) * (equity / entry.tvl);
             entry.escrow -= user_payout;
             entry.apr = get_apr(&e, entry.clone());
 
-            e.storage().instance().set(&key, &entry);
+            e.storage().persistent().set(&key, &entry);
             log!(&e, "Payout {}!", user_payout);
             transfer(&e, &e.current_contract_address(), &user, user_payout);
         }
@@ -130,14 +130,13 @@ impl Contract {
     pub fn distribute_payouts(e: Env) {
         let admin: Address = e.storage().instance().get(&DataKey::Admin).unwrap();
         admin.require_auth();
-        let index: Vec<String> = e.storage().instance().get(&DataKey::Index).unwrap_or(vec![&e]);
+        let index: Vec<String> = e.storage().persistent().get(&DataKey::Index).unwrap_or(vec![&e]);
         for key in index.iter() {
             // Access each entry by key
             log!(&e,"Key: {}", key);
             Self::distribute_payout(e.clone(), key);
         }
-    }
-  
+    } 
 }
 
 fn get_network(e: &Env) -> String {

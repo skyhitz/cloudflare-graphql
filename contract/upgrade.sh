@@ -45,7 +45,7 @@ ARGS="--network $NETWORK --source $ISSUER_SEED"
 soroban contract build 
 
 WASM_ID="$(
-    soroban contract install $ARGS \
+    soroban contract install --ignore-checks $ARGS \
       --wasm ./target/wasm32-unknown-unknown/release/skyhitz.wasm
 )"
 
