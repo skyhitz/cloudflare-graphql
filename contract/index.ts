@@ -60,8 +60,8 @@ class ContractClient {
 		}
 	}
 
-	public distributePayouts = async () => {
-		let tx = await this.contract.distribute_payouts();
+	public distributePayout = async (id: string) => {
+		let tx = await this.contract.distribute_payout({ id }, this.defaultOptions);
 
 		const res = await tx.signAndSend();
 		return res;

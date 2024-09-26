@@ -6,6 +6,7 @@ import { AlgoliaClient } from 'src/algolia/algolia';
 export const distributePayouts = async (_: any, __: any, context: Context) => {
 	const algolia = new AlgoliaClient(context.env);
 	const date = new Date();
+
 	const formattedDate = date.toISOString().split('T')[0];
 	const timestamp = date.getTime();
 
@@ -16,7 +17,19 @@ export const distributePayouts = async (_: any, __: any, context: Context) => {
 	}
 
 	const contractClient = new ContractClient(context.env);
-	await contractClient.distributePayouts();
+
+	const entries = await algolia.getAllEntries();
+
+	for (let i = 0; i < entries.length; i++) {
+		const entry = entries[i];
+		if (entry.escrow && entry.escrow > 0) {
+			try {
+				await contractClient.distributePayout(entry.id);
+			} catch (e) {
+				console.error('Failed to distribute payout for entry:', entry.id, e);
+			}
+		}
+	}
 
 	await algolia.setDistributionTimestamp(formattedDate, timestamp);
 

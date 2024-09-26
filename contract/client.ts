@@ -193,26 +193,6 @@ export interface Client {
     simulate?: boolean;
   }) => Promise<AssembledTransaction<null>>
 
-  /**
-   * Construct and simulate a distribute_payouts transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
-   */
-  distribute_payouts: (options?: {
-    /**
-     * The fee to pay for the transaction. Default: BASE_FEE
-     */
-    fee?: number;
-
-    /**
-     * The maximum amount of time to wait for the transaction to complete. Default: DEFAULT_TIMEOUT
-     */
-    timeoutInSeconds?: number;
-
-    /**
-     * Whether to automatically simulate the transaction when constructing the AssembledTransaction. Default: true
-     */
-    simulate?: boolean;
-  }) => Promise<AssembledTransaction<null>>
-
 }
 export class Client extends ContractClient {
   constructor(public readonly options: ContractClientOptions) {
@@ -225,8 +205,7 @@ export class Client extends ContractClient {
         "AAAAAAAAAAAAAAAEaW5pdAAAAAMAAAAAAAAABWFkbWluAAAAAAAAEwAAAAAAAAAHbmV0d29yawAAAAAQAAAAAAAAAANpZHMAAAAD6gAAABAAAAAA",
         "AAAAAAAAAAAAAAAHdXBncmFkZQAAAAABAAAAAAAAAA1uZXdfd2FzbV9oYXNoAAAAAAAD7gAAACAAAAAA",
         "AAAAAAAAAAAAAAAGaW52ZXN0AAAAAAADAAAAAAAAAAR1c2VyAAAAEwAAAAAAAAACaWQAAAAAABAAAAAAAAAABmFtb3VudAAAAAAACwAAAAA=",
-        "AAAAAAAAAAAAAAARZGlzdHJpYnV0ZV9wYXlvdXQAAAAAAAABAAAAAAAAAAJpZAAAAAAAEAAAAAA=",
-        "AAAAAAAAAAAAAAASZGlzdHJpYnV0ZV9wYXlvdXRzAAAAAAAAAAAAAA==" ]),
+        "AAAAAAAAAAAAAAARZGlzdHJpYnV0ZV9wYXlvdXQAAAAAAAABAAAAAAAAAAJpZAAAAAAAEAAAAAA=" ]),
       options
     )
   }
@@ -237,7 +216,6 @@ export class Client extends ContractClient {
         init: this.txFromJSON<null>,
         upgrade: this.txFromJSON<null>,
         invest: this.txFromJSON<null>,
-        distribute_payout: this.txFromJSON<null>,
-        distribute_payouts: this.txFromJSON<null>
+        distribute_payout: this.txFromJSON<null>
   }
 }

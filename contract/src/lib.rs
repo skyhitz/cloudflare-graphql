@@ -26,6 +26,9 @@ pub struct Contract;
 #[contractimpl]
 impl Contract {
     pub fn set_entry(e: Env, entry: Entry) {
+        let admin: Address = e.storage().instance().get(&DataKey::Admin).unwrap();
+        admin.require_auth();
+
         let key = DataKey::Entries(entry.id.clone());
         e.storage().persistent().set(&key, &entry);
 
@@ -42,7 +45,7 @@ impl Contract {
     }
 
     pub fn version() -> u32 {
-        6
+        8
     }
 
     pub fn init(e: Env, admin: Address, network: String, ids: Vec<String>) {
@@ -114,6 +117,9 @@ impl Contract {
     }
 
     pub fn distribute_payout(e: Env, id: String) {
+        let admin: Address = e.storage().instance().get(&DataKey::Admin).unwrap();
+        admin.require_auth();
+
         let key = DataKey::Entries(id.clone());
         let mut entry: Entry = e.storage().persistent().get(&key).unwrap();
         for (user, equity) in entry.shares.iter() {
@@ -126,17 +132,7 @@ impl Contract {
             transfer(&e, &e.current_contract_address(), &user, user_payout);
         }
     }
-
-    pub fn distribute_payouts(e: Env) {
-        let admin: Address = e.storage().instance().get(&DataKey::Admin).unwrap();
-        admin.require_auth();
-        let index: Vec<String> = e.storage().persistent().get(&DataKey::Index).unwrap_or(vec![&e]);
-        for key in index.iter() {
-            // Access each entry by key
-            log!(&e,"Key: {}", key);
-            Self::distribute_payout(e.clone(), key);
-        }
-    } 
+    
 }
 
 fn get_network(e: &Env) -> String {
