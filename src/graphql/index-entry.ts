@@ -1,11 +1,9 @@
 import axios from 'axios';
-import { fallbackIpfsGateway, ipfsProtocol, pinataIpfsGateway } from '../constants/constants';
+import { fallbackIpfsGateway, pinataIpfsGateway } from '../constants/constants';
 import { GraphQLError } from 'graphql';
 import { requireAuth } from 'src/auth/auth-context';
 import { AlgoliaClient } from 'src/algolia/algolia';
 import { Entry } from 'src/util/types';
-
-const shajs = require('sha.js');
 
 export const indexEntryResolver = async (_: any, { issuer, contract, tokenId, network, metaCid, fileCid }: any, ctx: any) => {
 	await requireAuth(ctx);

@@ -74,6 +74,26 @@ export interface Client {
   }) => Promise<AssembledTransaction<null>>
 
   /**
+   * Construct and simulate a remove_entry transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
+   */
+  remove_entry: ({id}: {id: string}, options?: {
+    /**
+     * The fee to pay for the transaction. Default: BASE_FEE
+     */
+    fee?: number;
+
+    /**
+     * The maximum amount of time to wait for the transaction to complete. Default: DEFAULT_TIMEOUT
+     */
+    timeoutInSeconds?: number;
+
+    /**
+     * Whether to automatically simulate the transaction when constructing the AssembledTransaction. Default: true
+     */
+    simulate?: boolean;
+  }) => Promise<AssembledTransaction<null>>
+
+  /**
    * Construct and simulate a get_entry transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    */
   get_entry: ({id}: {id: string}, options?: {
@@ -200,6 +220,7 @@ export class Client extends ContractClient {
       new ContractSpec([ "AAAAAgAAAAAAAAAAAAAAB0RhdGFLZXkAAAAABAAAAAAAAAAAAAAABUluZGV4AAAAAAAAAQAAAAAAAAAHRW50cmllcwAAAAABAAAAEAAAAAAAAAAAAAAAB05ldHdvcmsAAAAAAAAAAAAAAAAFQWRtaW4AAAA=",
         "AAAAAQAAAAAAAAAAAAAABUVudHJ5AAAAAAAABQAAAAAAAAADYXByAAAAAAsAAAAAAAAABmVzY3JvdwAAAAAACwAAAAAAAAACaWQAAAAAABAAAAAAAAAABnNoYXJlcwAAAAAD7AAAABMAAAALAAAAAAAAAAN0dmwAAAAACw==",
         "AAAAAAAAAAAAAAAJc2V0X2VudHJ5AAAAAAAAAQAAAAAAAAAFZW50cnkAAAAAAAfQAAAABUVudHJ5AAAAAAAAAA==",
+        "AAAAAAAAAAAAAAAMcmVtb3ZlX2VudHJ5AAAAAQAAAAAAAAACaWQAAAAAABAAAAAA",
         "AAAAAAAAAAAAAAAJZ2V0X2VudHJ5AAAAAAAAAQAAAAAAAAACaWQAAAAAABAAAAABAAAH0AAAAAVFbnRyeQAAAA==",
         "AAAAAAAAAAAAAAAHdmVyc2lvbgAAAAAAAAAAAQAAAAQ=",
         "AAAAAAAAAAAAAAAEaW5pdAAAAAMAAAAAAAAABWFkbWluAAAAAAAAEwAAAAAAAAAHbmV0d29yawAAAAAQAAAAAAAAAANpZHMAAAAD6gAAABAAAAAA",
@@ -211,6 +232,7 @@ export class Client extends ContractClient {
   }
   public readonly fromJSON = {
     set_entry: this.txFromJSON<null>,
+        remove_entry: this.txFromJSON<null>,
         get_entry: this.txFromJSON<Entry>,
         version: this.txFromJSON<u32>,
         init: this.txFromJSON<null>,

@@ -1,5 +1,4 @@
 import axios from 'axios';
-import FormData from 'form-data';
 
 type PinRes = {
 	IpfsHash: string;
@@ -41,35 +40,45 @@ class Pinanta {
 			});
 	}
 
-	public async pinBuffer(buffer: Buffer, fileName: string): Promise<PinRes> {
+	public async pinBuffer(buffer: Buffer): Promise<PinRes> {
 		let data = new FormData();
-		data.append('file', buffer, fileName);
+
+		const blob = new Blob([buffer]);
+
+		data.append('file', blob);
+
 		return this.pinData(data);
 	}
 
-	public async pinData(data: any) {
+	public async pinData(data: FormData) {
 		const options = JSON.stringify({
 			cidVersion: 1,
 		});
 		data.append('pinataOptions', options);
 
-		const res = await axios.post(`${this.pinataApi}/pinning/pinFileToIPFS`, data, {
+		const res = await fetch(`${this.pinataApi}/pinning/pinFileToIPFS`, {
+			method: 'POST',
 			headers: {
-				'Content-Type': `multipart/form-data; boundary=${data._boundary}`,
 				Authorization: `Bearer ${this.pinataJwt}`,
 			},
+			body: data,
 		});
-		return res.data as PinRes;
+		const resData = await res.json();
+		if (!resData) {
+			throw new Error('Error pinning data to Pinata');
+		}
+		return resData as PinRes;
 	}
 
 	public async pinAssetUrl(url: string): Promise<PinRes> {
 		console.log(url);
 		const data = new FormData();
 		const response = await axios.get(url, {
-			responseType: 'stream',
+			responseType: 'arraybuffer',
 		});
 
-		data.append(`file`, response.data);
+		const blob = new Blob([response.data]);
+		data.append(`file`, blob);
 		return this.pinData(data);
 	}
 

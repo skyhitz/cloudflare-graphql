@@ -35,7 +35,7 @@ export const decentralizeEntryResolver = async (_: any, { contract, tokenId, net
 	const convertedAnimation = await fetchAndConvertImage(metadata.image);
 	let imageHash;
 	if (convertedAnimation) {
-		const { IpfsHash } = await pinata.pinBuffer(convertedAnimation, metadata.image);
+		const { IpfsHash } = await pinata.pinBuffer(convertedAnimation);
 		imageHash = IpfsHash;
 	} else {
 		imageHash = await pinata.getIpfsHashForMedia(metadata.image);

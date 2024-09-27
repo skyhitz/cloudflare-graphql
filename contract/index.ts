@@ -75,6 +75,13 @@ class ContractClient {
 		return res;
 	};
 
+	public removeEntry = async (id: string) => {
+		const tx = await this.contract.remove_entry({ id }, this.defaultOptions);
+		const res = await tx.signAndSend();
+		console.log(res);
+		return res;
+	};
+
 	public getEntry = async (id: string) => {
 		const tx = await this.contract.get_entry({ id }, this.defaultOptions);
 		console.log(tx);

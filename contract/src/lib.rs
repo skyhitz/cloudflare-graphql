@@ -36,7 +36,25 @@ impl Contract {
         index.push_back(entry.id.clone());
         e.storage().persistent().set(&DataKey::Index, &index);
     }
+
+    pub fn remove_entry(e: Env, id: String) {
+        let admin: Address = e.storage().instance().get(&DataKey::Admin).unwrap();
+        admin.require_auth();
+
+        let key = DataKey::Entries(id.clone());
+        e.storage().persistent().remove(&key);
+
+        let index: Vec<String> = e.storage().persistent().get(&DataKey::Index).unwrap_or(vec![&e]);
     
+        let mut new_index = Vec::new(&e);
+        for i in index.iter() {
+            if i != id {
+                new_index.push_back(i.clone());
+            }
+        }
+
+        e.storage().persistent().set(&DataKey::Index, &new_index);
+    }
 
     pub fn get_entry(e: &Env, id: String) -> Entry {
         let key = DataKey::Entries(id);
@@ -45,7 +63,7 @@ impl Contract {
     }
 
     pub fn version() -> u32 {
-        8
+        9
     }
 
     pub fn init(e: Env, admin: Address, network: String, ids: Vec<String>) {
