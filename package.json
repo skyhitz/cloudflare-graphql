@@ -32,6 +32,7 @@
 		"algoliasearch": "^4.23.3",
 		"axios": "https://github.com/alejomendoza/axios",
 		"graphql": "^16.8.2",
+		"stripe": "^17.5.0",
 		"yup": "^0.32.11"
 	},
 	"overrides": {

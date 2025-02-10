@@ -15,6 +15,8 @@ type Mutation {
     username: String!
     signedXDR: String
   ): ConditionalUser!
+  createPaymentIntent(amount: Int!): PaymentIntentResponse!
+  checkPendingWithdrawals: Boolean!
   investEntry(id: String!, amount: Float!): ConditionalXDR!
   likeEntry(id: String!, like: Boolean!): Boolean!
   processEntry(
@@ -40,6 +42,10 @@ type Mutation {
   initContract: InitContractResult!
   submitLink(link: String!, email: String!): SubmitLinkResponse!
   distributePayouts: Boolean!
+}
+
+type PaymentIntentResponse {
+  clientSecret: String!
 }
 
 type InitContractResult {

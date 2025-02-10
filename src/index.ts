@@ -6,6 +6,7 @@ import { Context } from './util/types';
 import { resolvers } from './graphql/resolvers';
 import { Schema } from './graphql/schema';
 import { authenticateUser } from './auth/auth-context';
+import { handleWebhook } from './webhooks/stripe';
 
 const server = new ApolloServer<Context>({
 	typeDefs: Schema,
@@ -20,6 +21,9 @@ let handler: CloudflareWorkersHandler<Env> = startServerAndCreateCloudflareWorke
 
 export default {
 	async fetch(request: Request, env: Env, context: ExecutionContext) {
+		if (request.method === 'POST' && new URL(request.url).pathname === '/webhook') {
+			return handleWebhook(request, env);
+		}
 		let response = await handler(request, env, context);
 
 		response = new Response(response.body, response);

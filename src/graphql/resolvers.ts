@@ -17,6 +17,8 @@ import { processEntryResolver } from './process-entry';
 import { initContractResolver } from './init-contract';
 import { submitLinkResolver } from './submit-link';
 import { distributePayouts } from './distribute-payouts';
+import { createPaymentIntentResolver } from './create-payment-intent';
+import { checkPendingWithdrawalsResolver } from './check-pending-withdrawals';
 
 const Query = {
 	entry: entryByIdResolver,
@@ -28,6 +30,8 @@ const Query = {
 };
 
 const Mutation = {
+	checkPendingWithdrawals: checkPendingWithdrawalsResolver,
+	createPaymentIntent: createPaymentIntentResolver,
 	createUserWithEmail: createUserWithEmailResolver,
 	distributePayouts: distributePayouts,
 	initContract: initContractResolver,

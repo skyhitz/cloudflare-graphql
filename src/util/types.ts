@@ -16,6 +16,7 @@ export type User = {
 	lastPlayedEntry?: Entry;
 	twitter: string;
 	instagram: string;
+	minBalance?: number;
 };
 
 export type Entry = {
@@ -90,3 +91,20 @@ export type Timestamp = {
 	objectID: string;
 	timestamp: number;
 };
+
+export interface KrakenWithdrawal {
+	objectID: string; // refid
+	amount: number;
+	status: string;
+	email: string;
+	timestamp: number;
+}
+
+export interface KrakenWithdrawStatus {
+	result: Array<{
+		refid: string;
+		status: string;
+		asset: string;
+	}>;
+	error: string[];
+}
