@@ -4,6 +4,7 @@ import StripeClient from 'src/stripe/client';
 import { createUserWithEmailResolver } from 'src/graphql/create-user-with-email';
 import { Context } from 'src/util/types';
 import KrakenClient from 'src/kraken/client';
+import Mailer from 'src/sendgrid/sendgrid';
 
 export async function handleWebhook(request: Request, env: Env): Promise<Response> {
 	const sig = request.headers.get('stripe-signature');
@@ -50,6 +51,9 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
 }
 
 async function buyXLMWithUSD(amount: number, email: string, env: Env) {
+	if (amount <= 0) {
+		throw new Error('Invalid amount');
+	}
 	const krakenClient = new KrakenClient(env);
 	try {
 		const usdAmount = amount / 100; // Convert cents back to dollars for Kraken
@@ -81,23 +85,36 @@ async function sendFundsToUser(email: string, amount: number, env: Env) {
 	const algolia = new AlgoliaClient(env);
 	const stellar = new StellarClient(env);
 	const user = await algolia.getUserByEmail(email);
-	// check if user has account
-	if (!user) {
-		// create account and set username and displayName using the part before '@'
-		const username = email.split('@')[0];
-		// check if user has account
-		const ctx: Context = { env };
-		await createUserWithEmailResolver(null, { email: email, username: username, displayName: username }, ctx);
-		const newUser = await algolia.getUserByEmail(email);
 
-		if (newUser && newUser.publicKey) {
-			await stellar.pay(newUser.publicKey, amount);
-			await algolia.updateUserMinBalance(newUser.objectID, amount);
+	try {
+		if (!user) {
+			// Create new user
+			const username = email.split('@')[0];
+			const ctx: Context = { env };
+
+			await createUserWithEmailResolver(null, { email, username, displayName: username }, ctx);
+			const newUser = await algolia.getUserByEmail(email);
+
+			if (newUser && newUser.publicKey) {
+				await stellar.pay(newUser.publicKey, amount);
+				await algolia.updateUserMinBalance(newUser.objectID, amount);
+			} else {
+				throw new Error(`Failed to create user account properly: ${!newUser ? 'User not found' : 'Missing public key'}`);
+			}
+		} else {
+			// Handle existing user
+			if (user && !user.publicKey) {
+				throw new Error('User exists but has no public key');
+			}
+			if (user && user.publicKey) {
+				await stellar.pay(user.publicKey, amount);
+				await algolia.updateUserMinBalance(user.objectID, amount);
+			}
 		}
-	} else {
-		if (user && user.publicKey) {
-			await stellar.pay(user.publicKey, amount);
-			await algolia.updateUserMinBalance(user.objectID, amount);
-		}
+	} catch (error) {
+		console.error('Failed to process payment:', error);
+		const mailer = new Mailer(env);
+		await mailer.sendSupportEmail(email, error, amount);
+		throw new Error('Payment processing failed. Support has been notified.');
 	}
 }

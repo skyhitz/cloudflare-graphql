@@ -44,6 +44,21 @@ class Mailer {
 		});
 	}
 
+	sendSupportEmail(userEmail: string, error: any, amount: number) {
+		const msg = {
+			to: 'support@skyhitz.io',
+			from: 'hello@skyhitz.io',
+			subject: 'Failed User Creation - Manual Review Required',
+			text: `Failed to create user account for ${userEmail}.
+Payment Amount: ${amount} XLM
+Error: ${error.message}
+Timestamp: ${new Date().toISOString()}
+
+Please create the user account manually and review the case.`,
+		};
+		return sgMail.send(msg);
+	}
+
 	private sendMail(email: string, subject: string, templateId: string) {
 		return sgMail.send({
 			to: email,
