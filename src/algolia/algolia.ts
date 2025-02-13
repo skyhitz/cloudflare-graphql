@@ -1,7 +1,7 @@
 import algoliasearch, { SearchIndex } from 'algoliasearch';
 import { createFetchRequester } from '@algolia/requester-fetch';
 
-import { Entry, Share, Timestamp, User } from '../util/types';
+import { Entry, KrakenWithdrawal, Share, Timestamp, User } from '../util/types';
 
 export class AlgoliaClient {
 	public indices: {
@@ -16,6 +16,7 @@ export class AlgoliaClient {
 		timestampReplicaDesc: SearchIndex;
 		timestampReplicaAsc: SearchIndex;
 		distributionTimestampsIndex: SearchIndex;
+		withdrawalsIndex: SearchIndex;
 	};
 
 	constructor(env: Env) {
@@ -36,6 +37,7 @@ export class AlgoliaClient {
 			timestampReplicaDesc: client.initIndex(`${appDomain}:entries_timestamp_desc`),
 			timestampReplicaAsc: client.initIndex(`${appDomain}:entries_timestamp_asc`),
 			distributionTimestampsIndex: client.initIndex(`${appDomain}:distribution_timestamps`),
+			withdrawalsIndex: client.initIndex(`${appDomain}:withdrawals`),
 		};
 	}
 
@@ -207,6 +209,15 @@ export class AlgoliaClient {
 		return this.indices.usersIndex.partialUpdateObject(obj).wait();
 	}
 
+	async updateUserMinBalance(userId: string, minBalance: number) {
+		return this.indices.usersIndex
+			.partialUpdateObject({
+				objectID: userId,
+				minBalance: minBalance,
+			})
+			.wait();
+	}
+
 	async getCollection(userId: string) {
 		const res = await this.indices.sharesIndex.search('', {
 			filters: `userId:${userId}`,
@@ -244,5 +255,27 @@ export class AlgoliaClient {
 
 	async setDistributionTimestamp(key: string, value: number): Promise<void> {
 		await this.indices.distributionTimestampsIndex.saveObject({ objectID: key, timestamp: value });
+	}
+
+	async saveWithdrawal(withdrawal: KrakenWithdrawal) {
+		return this.indices.withdrawalsIndex.saveObject(withdrawal);
+	}
+
+	async getPendingWithdrawals() {
+		const withdrawals = await this.indices.withdrawalsIndex.search('', {
+			filters: 'status:pending',
+		});
+		return withdrawals.hits as unknown as KrakenWithdrawal[];
+	}
+
+	async updateWithdrawalStatus(refId: string, status: string) {
+		return this.indices.withdrawalsIndex.partialUpdateObject({
+			objectID: refId,
+			status,
+		});
+	}
+
+	async deleteWithdrawal(refId: string) {
+		return this.indices.withdrawalsIndex.deleteObject(refId);
 	}
 }

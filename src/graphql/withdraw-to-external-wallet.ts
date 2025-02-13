@@ -2,6 +2,7 @@ import Encryption from '../util/encryption';
 import StellarClient from '../stellar/operations';
 import { GraphQLError } from 'graphql';
 import { requireAuth } from 'src/auth/auth-context';
+import { AlgoliaClient } from 'src/algolia/algolia';
 
 /**
  * Withdraws user balance to external address in XLM
@@ -10,6 +11,7 @@ export const withdrawToExternalAddressResolver = async (_: any, { address, amoun
 	const user = requireAuth(ctx);
 	const encryption = new Encryption(ctx.env);
 	const stellar = new StellarClient(ctx.env);
+	const algolia = new AlgoliaClient(ctx.env);
 
 	const { seed, publicKey } = user;
 
@@ -20,12 +22,21 @@ export const withdrawToExternalAddressResolver = async (_: any, { address, amoun
 	try {
 		const { availableCredits: currentBalance } = await stellar.accountCredits(publicKey);
 
-		if (amount > currentBalance) {
-			throw new GraphQLError('Your account balance is too low.');
-		}
+		// Get latest user data to check minBalance
+		const latestUser = await algolia.getUserByPublicKey(user.publicKey);
+		const minBalance = latestUser.minBalance || 0;
 
+		// Calculate available balance for withdrawal
+		const availableForWithdrawal = currentBalance - minBalance;
+
+		if (amount > availableForWithdrawal) {
+			throw new GraphQLError(
+				`Cannot withdraw ${amount} XLM. Maximum withdrawal amount is ${availableForWithdrawal} XLM to maintain minimum balance of ${minBalance} XLM.`
+			);
+		}
 		console.log(`withdrawal to address ${address}, amount ${amount.toFixed(6)}`);
 		const decryptedSeed = await encryption.decrypt(seed);
+
 		await stellar.withdrawToExternalAddress(address, amount, decryptedSeed);
 		return true;
 	} catch (e) {

@@ -6,10 +6,15 @@ interface Env {
 	ALGOLIA_APP_ID: string;
 	ENV: string;
 	JWT_SECRET: string;
+	ISSUER_ID: string;
 	ISSUER_SEED: string;
 	ALGOLIA_ADMIN_API_KEY: string;
 	SENDGRID_API_KEY: string;
+	STRIPE_SECRET_KEY: string;
+	STRIPE_WEBHOOK_SECRET: string;
 	STELLAR_NETWORK: string;
 	PINATA_JWT: string;
 	ALCHEMY_API_KEY: string;
+	KRAKEN_API_KEY: string;
+	KRAKEN_API_PRIVATE_KEY: string;
 }
