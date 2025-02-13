@@ -3,7 +3,7 @@ import StellarClient from 'src/stellar/operations';
 import StripeClient from 'src/stripe/client';
 import { createUserWithEmailResolver } from 'src/graphql/create-user-with-email';
 import { Context } from 'src/util/types';
-import { getKrakenHeaders, krakenApiUrl } from 'src/util/kraken';
+import KrakenClient from 'src/kraken/client';
 
 export async function handleWebhook(request: Request, env: Env): Promise<Response> {
 	const sig = request.headers.get('stripe-signature');
@@ -50,54 +50,17 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
 }
 
 async function buyXLMWithUSD(amount: number, email: string, env: Env) {
-	const headers = getKrakenHeaders(env);
-
+	const krakenClient = new KrakenClient(env);
 	try {
 		const usdAmount = amount / 100; // Convert cents back to dollars for Kraken
 
-		// get XLM price from api
+		const { result, xlmAmount } = await krakenClient.buyAndWithdrawXLM(usdAmount);
 
-		const response = await fetch(`${krakenApiUrl}/0/public/Ticker?pair=XLMUSD`);
-		const data: any = await response.json();
-		const price = parseFloat(data.result.XXLMZUSD.c[0]);
-		// kraken has a fee of 0.0829%
-
-		const priceWithFee = price * 1.000829;
-		const xlmAmount = usdAmount / priceWithFee;
-
-		const buyRes = await fetch(`${krakenApiUrl}/0/private/AddOrder`, {
-			method: 'POST',
-			headers,
-			body: JSON.stringify({
-				pair: 'XXLMZUSD',
-				type: 'buy',
-				ordertype: 'market',
-				volume: xlmAmount.toString(),
-			}),
-		});
-		console.log(buyRes);
-
-		//  1 minute and 16 seconds to send XLM from Kraken to our Account
-
-		const withdrawRes = await fetch(`${krakenApiUrl}/0/private/Withdraw`, {
-			method: 'POST',
-			headers,
-			body: JSON.stringify({
-				nonce: 1695828271,
-				asset: 'XXLM',
-				key: 'skyhitz',
-				amount: xlmAmount.toString(),
-				address: env.ISSUER_ID,
-			}),
-		});
-
-		const withdrawData: { result: { refid: string } } = await withdrawRes.json();
-
-		if (withdrawData.result?.refid) {
+		if (result?.refid) {
 			const algolia = new AlgoliaClient(env);
 
 			await algolia.saveWithdrawal({
-				objectID: withdrawData.result.refid,
+				objectID: result.refid,
 				amount: xlmAmount,
 				status: 'pending',
 				email: email,

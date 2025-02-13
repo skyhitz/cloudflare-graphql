@@ -108,3 +108,14 @@ export interface KrakenWithdrawStatus {
 	}>;
 	error: string[];
 }
+
+export interface KrakenAddOrderRes {
+	result: {
+		descr: {
+			order: string;
+			close: string;
+		};
+		txid: string[];
+	};
+	error: string[];
+}
