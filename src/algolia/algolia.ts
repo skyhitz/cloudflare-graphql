@@ -128,7 +128,7 @@ export class AlgoliaClient {
 	}
 
 	async saveUser(user: User) {
-		return this.indices.usersIndex.saveObject(user);
+		return this.indices.usersIndex.saveObject(user).wait();
 	}
 
 	async likeMulti(userId: string, entryId: string) {
