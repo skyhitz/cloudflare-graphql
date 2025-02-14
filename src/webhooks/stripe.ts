@@ -13,41 +13,66 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
 	}
 
 	const body = await request.text();
-
 	const { stripe, webhookSecret } = new StripeClient(env);
-	console.log('webhook secret', webhookSecret);
 
 	let event;
-
 	try {
 		event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
 	} catch (err: any) {
+		console.error('Webhook signature verification failed:', err.message);
 		return new Response(`Webhook Error: ${err.message}`, { status: 400 });
 	}
 
-	// Handle the event
-	switch (event.type) {
-		case 'payment_intent.succeeded':
-			const paymentIntentSucceeded = event.data.object;
-			console.log(paymentIntentSucceeded);
+	try {
+		switch (event.type) {
+			case 'payment_intent.succeeded':
+				const paymentIntentSucceeded = event.data.object;
+				console.log('Processing payment:', paymentIntentSucceeded.id);
 
-			if (paymentIntentSucceeded.status === 'succeeded') {
-				const amount = paymentIntentSucceeded.amount;
-				const userEmail = paymentIntentSucceeded.receipt_email;
-				if (!userEmail) return new Response(null, { status: 200 });
+				if (paymentIntentSucceeded.status === 'succeeded') {
+					const amount = paymentIntentSucceeded.amount;
+					const userEmail = paymentIntentSucceeded.receipt_email;
 
-				await buyXLMWithUSD(amount, userEmail, env);
-			}
+					if (!userEmail) {
+						console.warn('No email provided for payment:', paymentIntentSucceeded.id);
+						return new Response(null, { status: 200 });
+					}
 
-			// Then define and call a function to handle the event payment_intent.succeeded
-			break;
-		// ... handle other event types
-		default:
-			console.log(`Unhandled event type ${event.type}`);
+					const xlmAmount = await buyXLMWithUSD(amount, userEmail, env);
+					console.log('Successfully processed payment:', {
+						paymentId: paymentIntentSucceeded.id,
+						email: userEmail,
+						usdAmount: amount,
+						xlmAmount,
+					});
+
+					return new Response(
+						JSON.stringify({
+							email: userEmail,
+							usdAmount: amount,
+							xlmAmount,
+							price: amount / xlmAmount,
+						}),
+						{
+							status: 200,
+							headers: { 'Content-Type': 'application/json' },
+						}
+					);
+				}
+				break;
+
+			default:
+				console.log(`Unhandled event type ${event.type}`);
+		}
+
+		return new Response(null, { status: 200 });
+	} catch (error) {
+		console.error('Error processing webhook:', error);
+		return new Response(JSON.stringify({ error: 'Internal server error' }), {
+			status: 500,
+			headers: { 'Content-Type': 'application/json' },
+		});
 	}
-
-	// Return a 200 response to acknowledge receipt of the event
-	return new Response(null, { status: 200 });
 }
 
 async function buyXLMWithUSD(amount: number, email: string, env: Env) {
@@ -74,10 +99,10 @@ async function buyXLMWithUSD(amount: number, email: string, env: Env) {
 
 		await sendFundsToUser(email, xlmAmount, env);
 
-		return new Response('Payment processed successfully, XLM transaction initiated', { status: 200 });
+		return xlmAmount;
 	} catch (error: any) {
 		console.error('Error in processing payment:', error);
-		return new Response('Error processing payment: ' + error.message, { status: 500 });
+		throw new Error('Error processing payment: ' + error.message);
 	}
 }
 
