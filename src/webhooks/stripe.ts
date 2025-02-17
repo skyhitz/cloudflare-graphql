@@ -32,26 +32,54 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
 				if (paymentIntentSucceeded.status === 'succeeded') {
 					const amount = paymentIntentSucceeded.amount;
 					const userEmail = paymentIntentSucceeded.receipt_email;
+					const latestCharge = paymentIntentSucceeded.latest_charge as string;
+
+					if (!latestCharge) {
+						throw new Error('No charge found for payment');
+					}
 
 					if (!userEmail) {
 						console.warn('No email provided for payment:', paymentIntentSucceeded.id);
 						return new Response(null, { status: 200 });
 					}
 
-					const xlmAmount = await buyXLMWithUSD(amount, userEmail, env);
+					// Get charge details to calculate fees
+					const charge = await stripe.charges.retrieve(latestCharge);
+					if (!charge.balance_transaction) {
+						throw new Error('No balance transaction found');
+					}
+
+					const balanceTx = charge.balance_transaction as string;
+					const balanceTransaction = await stripe.balanceTransactions.retrieve(balanceTx);
+
+					const netAmount = balanceTransaction.net;
+					const stripeFee = balanceTransaction.fee;
+
+					console.log('Payment details:', {
+						paymentId: paymentIntentSucceeded.id,
+						gross: amount,
+						fee: stripeFee,
+						net: netAmount,
+					});
+
+					const xlmAmount = await buyXLMWithUSD(netAmount, userEmail, env);
 					console.log('Successfully processed payment:', {
 						paymentId: paymentIntentSucceeded.id,
 						email: userEmail,
-						usdAmount: amount,
+						grossAmount: amount,
+						stripeFee,
+						netAmount,
 						xlmAmount,
 					});
 
 					return new Response(
 						JSON.stringify({
 							email: userEmail,
-							usdAmount: amount,
+							grossAmount: amount,
+							stripeFee,
+							netAmount,
 							xlmAmount,
-							price: amount / xlmAmount,
+							price: netAmount / xlmAmount,
 						}),
 						{
 							status: 200,
