@@ -1201,36 +1201,37 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@stellar/stellar-base@npm:^12.1.0":
-  version: 12.1.0
-  resolution: "@stellar/stellar-base@npm:12.1.0"
+"@stellar/stellar-base@npm:^13.0.1":
+  version: 13.0.1
+  resolution: "@stellar/stellar-base@npm:13.0.1"
   dependencies:
     "@stellar/js-xdr": "npm:^3.1.2"
     base32.js: "npm:^0.1.0"
     bignumber.js: "npm:^9.1.2"
     buffer: "npm:^6.0.3"
     sha.js: "npm:^2.3.6"
-    sodium-native: "npm:^4.1.1"
+    sodium-native: "npm:^4.3.0"
     tweetnacl: "npm:^1.0.3"
   dependenciesMeta:
     sodium-native:
       optional: true
-  checksum: 10c0/c3430c383a61afa32e55c4d4afc1090b8937291c5067ade45d97d58d9c595254df50df1811dd8c24baa775171c2034a062f9b7196c1f2e302165140120a6adc6
+  checksum: 10c0/998247a2e2173b0636f5f17076e6a4a8e80fbf42e6619056e4b7a0438f8f6bbbbddab7a998cd96ad1bcb5b5310e16e113ce07b946f15a9b9c12775ab19304eae
   languageName: node
   linkType: hard
 
-"@stellar/stellar-sdk@npm:^12.1.0":
-  version: 12.2.0
-  resolution: "@stellar/stellar-sdk@npm:12.2.0"
+"@stellar/stellar-sdk@npm:^13.1.0":
+  version: 13.1.0
+  resolution: "@stellar/stellar-sdk@npm:13.1.0"
   dependencies:
-    "@stellar/stellar-base": "npm:^12.1.0"
-    axios: "npm:^1.7.2"
+    "@stellar/stellar-base": "npm:^13.0.1"
+    axios: "npm:^1.7.9"
     bignumber.js: "npm:^9.1.2"
     eventsource: "npm:^2.0.2"
+    feaxios: "npm:^0.0.23"
     randombytes: "npm:^2.1.0"
     toml: "npm:^3.0.0"
     urijs: "npm:^1.19.1"
-  checksum: 10c0/6a71cb8ee0bebd091c5ec1c9b2cc15059156063f20098001edc23e43bffc08322c560fe3102de20b558ecb0eb46996e4b6a014021d444c874debdae757c0c271
+  checksum: 10c0/394c1d066d7c346b41fce833f8805f68d1741a8a416828bea1208fd06bd94edd100e4ab8a60891e3a73f78844de2cd83948b7849bbeee15422ebba0aa9e697fb
   languageName: node
   linkType: hard
 
@@ -1892,7 +1893,7 @@ __metadata:
     "@cloudflare/vitest-pool-workers": "npm:^0.1.0"
     "@cloudflare/workers-types": "npm:^4.20240614.0"
     "@sendgrid/mail": "npm:^8.1.3"
-    "@stellar/stellar-sdk": "npm:^12.1.0"
+    "@stellar/stellar-sdk": "npm:^13.1.0"
     "@tsndr/cloudflare-worker-jwt": "npm:^2.5.3"
     "@types/node": "npm:^22.5.4"
     algoliasearch: "npm:^4.23.3"
@@ -2479,6 +2480,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"feaxios@npm:^0.0.23":
+  version: 0.0.23
+  resolution: "feaxios@npm:0.0.23"
+  dependencies:
+    is-retry-allowed: "npm:^3.0.0"
+  checksum: 10c0/e82204eba05ecf9744fc6ae15b7db725888e8ffaf883c17fe84a5118d141d717ea0704d21764d1566c528b574013d5fd2cc1a6601dbc4bdbedfbf662d621f176
+  languageName: node
+  linkType: hard
+
 "fill-range@npm:^7.1.1":
   version: 7.1.1
   resolution: "fill-range@npm:7.1.1"
@@ -2950,6 +2960,13 @@ __metadata:
   version: 7.0.0
   resolution: "is-number@npm:7.0.0"
   checksum: 10c0/b4686d0d3053146095ccd45346461bc8e53b80aeb7671cc52a4de02dbbf7dc0d1d2a986e2fe4ae206984b4d34ef37e8b795ebc4f4295c978373e6575e295d811
+  languageName: node
+  linkType: hard
+
+"is-retry-allowed@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "is-retry-allowed@npm:3.0.0"
+  checksum: 10c0/7dc52fb51c7b1767c4710e8cafed9887cfeae515a02195e9a11868fd851e601a4456e638fdc9b184a73c483d305cac46e76583edd16d78c82d7db169d3974fe9
   languageName: node
   linkType: hard
 
@@ -4207,13 +4224,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sodium-native@npm:^4.1.1":
-  version: 4.1.1
-  resolution: "sodium-native@npm:4.1.1"
+"sodium-native@npm:^4.3.0":
+  version: 4.3.2
+  resolution: "sodium-native@npm:4.3.2"
   dependencies:
-    node-gyp: "npm:latest"
     node-gyp-build: "npm:^4.8.0"
-  checksum: 10c0/7687554fc224bcd350a3b695de792d21b0c374d116d82306f16b5ff674c58f5f397667a1c977dd7e14bde2de4657b8bcd0bdd7cf435eb55173380c825754793f
+  checksum: 10c0/92028fe65659826e8134578d7530704332ebc08b76a586681b104be226c77e5c7acb58431408be315888d8d57e6c9934eae12c7608890a88acf382b67453969e
   languageName: node
   linkType: hard
 

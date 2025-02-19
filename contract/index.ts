@@ -1,7 +1,7 @@
 import { Horizon, Keypair, Transaction, hash, scValToNative, xdr } from '@stellar/stellar-sdk';
 import { Client, Entry, networks } from './client';
 
-Horizon.AxiosClient.defaults.adapter = 'fetch';
+Horizon.AxiosClient.defaults.adapter = 'fetch' as any;
 
 // serialize big int
 (BigInt.prototype as any).toJSON = function () {
@@ -16,7 +16,7 @@ type RpcUrl = 'https://soroban-testnet.stellar.org' | 'https://soroban-rpc.mainn
 class ContractClient {
 	private sourceKeys: Keypair;
 	private contract: Client;
-	private defaultOptions = { timeoutInSeconds: 60, fee: 100000000 };
+	private defaultOptions = { timeoutInSeconds: 60, fee: 100000000, restore: true };
 	private network: Network;
 	private horizonUrl: HorizonUrl;
 	private rpcUrl: RpcUrl;
@@ -41,10 +41,17 @@ class ContractClient {
 			signTransaction: async (tx: string, opts) => {
 				const txFromXDR = new Transaction(tx, network.networkPassphrase);
 				txFromXDR.sign(keys);
-				return txFromXDR.toXDR();
+				return {
+					signedTxXdr: txFromXDR.toXDR(),
+					signerAddress: keys.publicKey(),
+				};
 			},
 			signAuthEntry: async (entryXdr, opts) => {
-				return keys.sign(hash(Buffer.from(entryXdr, 'base64'))).toString('base64');
+				const signedAuthEntry = keys.sign(hash(Buffer.from(entryXdr, 'base64'))).toString('base64');
+				return {
+					signedAuthEntry,
+					signerAddress: keys.publicKey(),
+				};
 			},
 		});
 	}
