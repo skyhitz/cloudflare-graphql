@@ -93,8 +93,6 @@ type Entry {
   title: String!
   id: String!
   artist: String!
-  code: String!
-  issuer: String!
 }
 
 type EntryLikes {
@@ -122,8 +120,6 @@ type EntryDetails {
   title: String!
   id: String!
   artist: String!
-  code: String!
-  issuer: String!
   holders: [EntryHolder!]
   history: [EntryActivity!]
   tvl: Float
