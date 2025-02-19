@@ -1,5 +1,5 @@
 import { Horizon, Keypair, Transaction, hash, scValToNative, xdr } from '@stellar/stellar-sdk';
-import { Client, Entry, networks } from './client';
+import { Client, Entry } from './client';
 
 Horizon.AxiosClient.defaults.adapter = 'fetch' as any;
 
@@ -9,37 +9,49 @@ Horizon.AxiosClient.defaults.adapter = 'fetch' as any;
 	return int ?? this.toString();
 };
 
-type HorizonUrl = 'https://horizon-testnet.stellar.org' | 'https://horizon.stellar.org';
+const mainnetNetworkPassphrase = 'Public Global Stellar Network ; September 2015';
+const testnetNetworkPassphrase = 'Test SDF Network ; September 2015';
+const mainnetHorizonUrl = 'https://horizon.stellar.org';
+const testnetHorizonUrl = 'https://horizon-testnet.stellar.org';
+const mainnetContractId = 'CDCN2D4OF5IHPAHUIF6RPVH654KW6LKTYKYK3IQULBBWURD7L4CDNSRO';
+const testnetContractId = 'CAEBQYLKDHUDX4B5ELJ2T32NSWYO45PA7ZO3ITPAVVYVJN6UCDG5IOLS';
+const mainnetRpcUrl = 'https://soroban-rpc.mainnet.stellar.gateway.fm';
+const testnetRpcUrl = 'https://soroban-testnet.stellar.org';
+
+type HorizonUrl = typeof testnetHorizonUrl | typeof mainnetHorizonUrl;
 type Network = 'testnet' | 'mainnet';
-type RpcUrl = 'https://soroban-testnet.stellar.org' | 'https://soroban-rpc.mainnet.stellar.gateway.fm';
+type RpcUrl = typeof testnetRpcUrl | typeof mainnetRpcUrl;
+type ContractId = typeof testnetContractId | typeof mainnetContractId;
+type NetworkPassphrase = typeof testnetNetworkPassphrase | typeof mainnetNetworkPassphrase;
 
 class ContractClient {
 	private sourceKeys: Keypair;
-	private contract: Client;
-	private defaultOptions = { timeoutInSeconds: 60, fee: 100000000, restore: true };
+	private defaultOptions = { timeoutInSeconds: 60, fee: 100000000 };
 	private network: Network;
 	private horizonUrl: HorizonUrl;
 	private rpcUrl: RpcUrl;
+	private contractId: ContractId;
+	private networkPassphrase: NetworkPassphrase;
+	private contract: Client;
 
 	constructor(env: Env) {
 		this.sourceKeys = Keypair.fromSecret(env.ISSUER_SEED);
 		this.network = env.STELLAR_NETWORK as Network;
-		this.horizonUrl = env.STELLAR_NETWORK === 'testnet' ? 'https://horizon-testnet.stellar.org' : 'https://horizon.stellar.org';
-		this.rpcUrl =
-			env.STELLAR_NETWORK === 'testnet' ? 'https://soroban-testnet.stellar.org' : 'https://soroban-rpc.mainnet.stellar.gateway.fm';
+		this.horizonUrl = env.STELLAR_NETWORK === 'testnet' ? testnetHorizonUrl : mainnetHorizonUrl;
+		this.rpcUrl = env.STELLAR_NETWORK === 'testnet' ? testnetRpcUrl : mainnetRpcUrl;
+		this.contractId = env.STELLAR_NETWORK === 'testnet' ? testnetContractId : mainnetContractId;
+		this.networkPassphrase = env.STELLAR_NETWORK === 'testnet' ? testnetNetworkPassphrase : mainnetNetworkPassphrase;
 		this.contract = this.getClientForKeypair(this.sourceKeys);
 	}
 
 	public getClientForKeypair(keys: Keypair) {
-		const [network] = Object.values(networks);
-
 		return new Client({
-			contractId: network.contractId,
-			networkPassphrase: network.networkPassphrase,
+			contractId: this.contractId,
+			networkPassphrase: this.networkPassphrase,
 			rpcUrl: this.rpcUrl,
 			publicKey: keys.publicKey(),
 			signTransaction: async (tx: string, opts) => {
-				const txFromXDR = new Transaction(tx, network.networkPassphrase);
+				const txFromXDR = new Transaction(tx, this.networkPassphrase);
 				txFromXDR.sign(keys);
 				return {
 					signedTxXdr: txFromXDR.toXDR(),

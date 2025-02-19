@@ -12,7 +12,8 @@
 		"testnet:contract:upgrade": "./contract/upgrade.sh ${NETWORK:-testnet}",
 		"testnet:contract:redeploy": "rm -r ./contract/.vars && npm run contract:setup",
 		"mainnet:contract:setup": "./contract/init.sh ${NETWORK:-mainnet}",
-		"mainnet:contract:upgrade": "./contract/upgrade.sh ${NETWORK:-mainnet}"
+		"mainnet:contract:upgrade": "./contract/upgrade.sh ${NETWORK:-mainnet}",
+		"mainnet:contract:bindings": "./contract/bindings.sh ${NETWORK:-mainnet}"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.1.0",
