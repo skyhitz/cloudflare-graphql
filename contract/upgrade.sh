@@ -36,16 +36,16 @@ if [[ "$NETWORK" == "testnet" ]]; then
   curl --silent -X POST "$FRIENDBOT_URL?addr=$ISSUER_ID" >/dev/null
 fi
 
-soroban network add \
+stellar network add \
   --rpc-url "$SOROBAN_RPC_URL" \
   --network-passphrase "$SOROBAN_NETWORK_PASSPHRASE" "$NETWORK"
 
 ARGS="--network $NETWORK --source $ISSUER_SEED"
 
-soroban contract build 
+stellar contract build 
 
 WASM_ID="$(
-    soroban contract install --ignore-checks $ARGS \
+    stellar contract install --ignore-checks $ARGS \
       --wasm ./target/wasm32-unknown-unknown/release/skyhitz.wasm
 )"
 
@@ -55,24 +55,23 @@ echo "Installed contract with wasm ID $WASM_ID"
 
 mkdir -p client
 
-soroban contract bindings typescript \
+stellar contract bindings typescript \
   --wasm ./target/wasm32-unknown-unknown/release/skyhitz.wasm \
   --output-dir ./client \
   --network $NETWORK \
-  --contract-id $(cat ./.vars/$CTR) \
   --overwrite
 
 cp ./client/src/index.ts ./client.ts
 
 rm -rf ./client
 
-soroban contract invoke $ARGS \
+stellar contract invoke $ARGS \
   --id $(cat ./.vars/$CTR) \
   -- \
   upgrade \
   --new_wasm_hash $WASM_ID
 
-soroban contract invoke $ARGS \
+stellar contract invoke $ARGS \
   --id $(cat ./.vars/$CTR) \
   -- \
   version

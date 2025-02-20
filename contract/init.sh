@@ -41,7 +41,7 @@ echo "  RPC URL: $SOROBAN_RPC_URL"
 echo "  Friendbot URL: $FRIENDBOT_URL"
 
 echo Add the $NETWORK network to cli client
-soroban network add \
+stellar network add \
   --rpc-url "$SOROBAN_RPC_URL" \
   --network-passphrase "$SOROBAN_NETWORK_PASSPHRASE" "$NETWORK"
 
@@ -53,12 +53,12 @@ yarn install
 
 echo Build contracts
 
-soroban contract build 
+stellar contract build 
 
 # echo Deploy the voting contracts
 echo Deploy contract $CTR
   DEPLOYED_CTR_ID="$(
-    soroban contract deploy $ARGS \
+    stellar contract deploy $ARGS \
       --wasm ./target/wasm32-unknown-unknown/release/skyhitz.wasm
   )"
   echo "Contract deployed succesfully with ID: $DEPLOYED_CTR_ID"
@@ -70,11 +70,10 @@ echo Deploy contract $CTR
   # we do not use bindings for now but they're sometimes useful - they contain a lot of code that interacts with blockchain
   # plus we may switch to using them one day
   # echo Build Bindings for $CTR
-  soroban contract bindings typescript \
+  stellar contract bindings typescript \
     --wasm ./target/wasm32-unknown-unknown/release/skyhitz.wasm \
     --output-dir ./client \
     --network $NETWORK \
-    --contract-id $(cat ./.vars/$CTR) \
     --overwrite
 
   cp ./client/src/index.ts ./client.ts

@@ -20,6 +20,9 @@ pub struct Entry {
     pub shares: Map<Address, i128>,
 }
 
+ // Use scale factor of 1_000_000 for 6 decimal precision
+ const SCALE: i128 = 1_000_000;
+
 #[contract]
 pub struct Contract;
 
@@ -42,6 +45,9 @@ impl Contract {
         admin.require_auth();
 
         let key = DataKey::Entries(id.clone());
+        if !e.storage().persistent().has(&key) {
+            panic!("Entry not found");
+        }
         e.storage().persistent().remove(&key);
 
         let index: Vec<String> = e.storage().persistent().get(&DataKey::Index).unwrap_or(vec![&e]);
@@ -57,13 +63,15 @@ impl Contract {
     }
 
     pub fn get_entry(e: &Env, id: String) -> Entry {
-        let key = DataKey::Entries(id);
-
+        let key = DataKey::Entries(id.clone());
+        if !e.storage().persistent().has(&key) {
+            panic!("Entry not found");
+        }
         e.storage().persistent().get(&key).unwrap()
     }
 
     pub fn version() -> u32 {
-        9
+        10
     }
 
     pub fn init(e: Env, admin: Address, network: String, ids: Vec<String>) {
@@ -140,8 +148,16 @@ impl Contract {
 
         let key = DataKey::Entries(id.clone());
         let mut entry: Entry = e.storage().persistent().get(&key).unwrap();
+        
         for (user, equity) in entry.shares.iter() {
-            let user_payout = (entry.escrow / 365) * (equity / entry.tvl);
+            let daily_escrow = entry.escrow / 365;
+            // Scale up equity before division to maintain precision
+
+            let scaled_ratio: i128 = (equity * SCALE) / entry.tvl;
+
+            // Scale down after multiplication
+            let user_payout = (daily_escrow * scaled_ratio) / SCALE;
+            
             entry.escrow -= user_payout;
             entry.apr = get_apr(&e, entry.clone());
 
@@ -161,10 +177,10 @@ fn get_network(e: &Env) -> String {
 }
 
 fn get_apr(_: &Env, entry: Entry) -> i128 {
-  if entry.tvl == 0 {
-      return 0
-  } 
-  ((entry.escrow - entry.tvl) * 100) / entry.tvl
+    if entry.tvl == 0 || entry.escrow <= entry.tvl {
+        return 0;
+    }
+    ((entry.escrow - entry.tvl) * SCALE * 100) / (entry.tvl * SCALE)
 }
 
 fn transfer(e: &Env, from: &Address, to: &Address, amount: i128) {
