@@ -18,6 +18,7 @@ pub struct Entry {
     pub tvl: i128,
     pub escrow: i128,
     pub shares: Map<Address, i128>,
+    pub withdrawn_earnings: Map<Address, i128>,
 }
 
  // Use scale factor of 1_000_000 for 6 decimal precision
@@ -71,7 +72,7 @@ impl Contract {
     }
 
     pub fn version() -> u32 {
-        10
+        19
     }
 
     pub fn init(e: Env, admin: Address, network: String, ids: Vec<String>) {
@@ -97,6 +98,7 @@ impl Contract {
                     tvl: 0,
                     escrow: 0,
                     shares: Map::new(&e),
+                    withdrawn_earnings: Map::new(&e),
                 };
                 
                 // Add the new entry to storage
@@ -121,9 +123,38 @@ impl Contract {
      
     pub fn invest(e: Env, user: Address, id: String, amount: i128) {
         user.require_auth();
-        let download_amount = 3000000;
+        let download_amount = 3000000; 
         let key = DataKey::Entries(id.clone());
-        let mut entry: Entry = e.storage().persistent().get(&key).unwrap();
+
+        // Check if entry exists, create if not
+        let mut entry: Entry = if !e.storage().persistent().has(&key) {
+            log!(&e, "Entry not found, creating default: {}", id);
+            // Entry does not exist, create it with default values
+            let new_entry = Entry {
+                id: id.clone(),
+                apr: 0,
+                tvl: 0,
+                escrow: 0,
+                shares: Map::new(&e),
+                withdrawn_earnings: Map::new(&e), // Ensure new field is initialized
+            };
+
+            // Add the new entry to storage
+            e.storage().persistent().set(&key, &new_entry);
+
+            // Add the new entry's ID to the index
+            // Fetch index, add ID if not present, save index
+            let mut index: Vec<String> = e.storage().persistent().get(&DataKey::Index).unwrap_or(vec![&e]);
+            if !index.contains(&id) { 
+                 index.push_back(id.clone());
+                 e.storage().persistent().set(&DataKey::Index, &index);
+            }
+            // Use the newly created entry for the subsequent investment logic
+            new_entry 
+        } else {
+            // Entry exists, fetch it
+            e.storage().persistent().get(&key).unwrap() // Safe to unwrap now
+        };
 
         // Update equity share
         let past_user_equity = entry.shares.get(user.clone()).unwrap_or(0);
@@ -142,31 +173,67 @@ impl Contract {
         transfer(&e, &user, &e.current_contract_address(), amount);
     }
 
-    pub fn distribute_payout(e: Env, id: String) {
-        let admin: Address = e.storage().instance().get(&DataKey::Admin).unwrap();
-        admin.require_auth();
+    pub fn claim_earnings(e: Env, user: Address, id: String) -> i128 {
+        user.require_auth();
 
         let key = DataKey::Entries(id.clone());
-        let mut entry: Entry = e.storage().persistent().get(&key).unwrap();
-        
-        for (user, equity) in entry.shares.iter() {
-            let daily_escrow = entry.escrow / 365;
-            // Scale up equity before division to maintain precision
+        let mut entry: Entry = e.storage().persistent().get(&key).unwrap_or_else(|| panic!("Entry not found"));
 
-            let scaled_ratio: i128 = (equity * SCALE) / entry.tvl;
-
-            // Scale down after multiplication
-            let user_payout = (daily_escrow * scaled_ratio) / SCALE;
-            
-            entry.escrow -= user_payout;
-            entry.apr = get_apr(&e, entry.clone());
-
-            e.storage().persistent().set(&key, &entry);
-            log!(&e, "Payout {}!", user_payout);
-            transfer(&e, &e.current_contract_address(), &user, user_payout);
+        let user_share = entry.shares.get(user.clone()).unwrap_or(0);
+        if user_share == 0 {
+            panic!("User has no shares in this entry");
         }
+
+        // Total earnings accumulated in the escrow beyond the initial TVL
+        let total_earnings = if entry.escrow > entry.tvl {
+            entry.escrow - entry.tvl
+        } else {
+            0 // No earnings if escrow hasn't surpassed TVL
+        };
+
+        if total_earnings == 0 {
+             log!(&e, "No earnings available to claim yet.");
+            return 0; // Nothing to claim
+        }
+
+        // Calculate user's proportional share of total earnings
+        // Scale up share before division to maintain precision
+        let scaled_user_earning_share: i128 = if entry.tvl > 0 {
+            (user_share * SCALE) / entry.tvl
+        } else {
+            0 // Handle the case where TVL is zero
+        };
+        let user_total_earned = (total_earnings * scaled_user_earning_share) / SCALE;
+
+
+        let previously_withdrawn = entry.withdrawn_earnings.get(user.clone()).unwrap_or(0);
+        let claimable_amount = user_total_earned - previously_withdrawn;
+
+        if claimable_amount <= 0 {
+             log!(&e, "No claimable amount for user or already withdrawn.");
+            return 0; // Nothing to claim or already withdrawn
+        }
+
+        // Update withdrawn earnings for the user
+        entry.withdrawn_earnings.set(user.clone(), previously_withdrawn + claimable_amount);
+
+        // Decrease total escrow by the claimed amount
+        // Note: We don't touch TVL here, only the earnings portion (escrow)
+        entry.escrow -= claimable_amount;
+
+        // Recalculate APR after claim (optional, but good practice)
+        entry.apr = get_apr(&e, entry.clone());
+
+        // Save updated entry state
+        e.storage().persistent().set(&key, &entry);
+
+        // Transfer the claimed amount to the user
+        log!(&e, "Claiming {} for user {}", claimable_amount, user.clone());
+        transfer(&e, &e.current_contract_address(), &user, claimable_amount);
+        
+        // Return the claimed amount
+        claimable_amount
     }
-    
 }
 
 fn get_network(e: &Env) -> String {
@@ -205,4 +272,3 @@ fn get_xlm_address(e: &Env) -> Address {
     // Return the corresponding Address
     Address::from_string(&String::from_str(e, address_str))
 }
-

@@ -42,6 +42,7 @@ export interface Entry {
   id: string;
   shares: Map<string, i128>;
   tvl: i128;
+  withdrawn_earnings: Map<string, i128>;
 }
 
 export const Errors = {
@@ -190,9 +191,9 @@ export interface Client {
   }) => Promise<AssembledTransaction<null>>
 
   /**
-   * Construct and simulate a distribute_payout transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
+   * Construct and simulate a claim_earnings transaction. Returns an `AssembledTransaction` object which will have a `result` field containing the result of the simulation. If this transaction changes contract state, you will need to call `signAndSend()` on the returned object.
    */
-  distribute_payout: ({id}: {id: string}, options?: {
+  claim_earnings: ({user, id}: {user: string, id: string}, options?: {
     /**
      * The fee to pay for the transaction. Default: BASE_FEE
      */
@@ -207,7 +208,7 @@ export interface Client {
      * Whether to automatically simulate the transaction when constructing the AssembledTransaction. Default: true
      */
     simulate?: boolean;
-  }) => Promise<AssembledTransaction<null>>
+  }) => Promise<AssembledTransaction<i128>>
 
 }
 export class Client extends ContractClient {
@@ -228,7 +229,7 @@ export class Client extends ContractClient {
   constructor(public readonly options: ContractClientOptions) {
     super(
       new ContractSpec([ "AAAAAgAAAAAAAAAAAAAAB0RhdGFLZXkAAAAABAAAAAAAAAAAAAAABUluZGV4AAAAAAAAAQAAAAAAAAAHRW50cmllcwAAAAABAAAAEAAAAAAAAAAAAAAAB05ldHdvcmsAAAAAAAAAAAAAAAAFQWRtaW4AAAA=",
-        "AAAAAQAAAAAAAAAAAAAABUVudHJ5AAAAAAAABQAAAAAAAAADYXByAAAAAAsAAAAAAAAABmVzY3JvdwAAAAAACwAAAAAAAAACaWQAAAAAABAAAAAAAAAABnNoYXJlcwAAAAAD7AAAABMAAAALAAAAAAAAAAN0dmwAAAAACw==",
+        "AAAAAQAAAAAAAAAAAAAABUVudHJ5AAAAAAAABgAAAAAAAAADYXByAAAAAAsAAAAAAAAABmVzY3JvdwAAAAAACwAAAAAAAAACaWQAAAAAABAAAAAAAAAABnNoYXJlcwAAAAAD7AAAABMAAAALAAAAAAAAAAN0dmwAAAAACwAAAAAAAAASd2l0aGRyYXduX2Vhcm5pbmdzAAAAAAPsAAAAEwAAAAs=",
         "AAAAAAAAAAAAAAAJc2V0X2VudHJ5AAAAAAAAAQAAAAAAAAAFZW50cnkAAAAAAAfQAAAABUVudHJ5AAAAAAAAAA==",
         "AAAAAAAAAAAAAAAMcmVtb3ZlX2VudHJ5AAAAAQAAAAAAAAACaWQAAAAAABAAAAAA",
         "AAAAAAAAAAAAAAAJZ2V0X2VudHJ5AAAAAAAAAQAAAAAAAAACaWQAAAAAABAAAAABAAAH0AAAAAVFbnRyeQAAAA==",
@@ -236,7 +237,7 @@ export class Client extends ContractClient {
         "AAAAAAAAAAAAAAAEaW5pdAAAAAMAAAAAAAAABWFkbWluAAAAAAAAEwAAAAAAAAAHbmV0d29yawAAAAAQAAAAAAAAAANpZHMAAAAD6gAAABAAAAAA",
         "AAAAAAAAAAAAAAAHdXBncmFkZQAAAAABAAAAAAAAAA1uZXdfd2FzbV9oYXNoAAAAAAAD7gAAACAAAAAA",
         "AAAAAAAAAAAAAAAGaW52ZXN0AAAAAAADAAAAAAAAAAR1c2VyAAAAEwAAAAAAAAACaWQAAAAAABAAAAAAAAAABmFtb3VudAAAAAAACwAAAAA=",
-        "AAAAAAAAAAAAAAARZGlzdHJpYnV0ZV9wYXlvdXQAAAAAAAABAAAAAAAAAAJpZAAAAAAAEAAAAAA=" ]),
+        "AAAAAAAAAAAAAAAOY2xhaW1fZWFybmluZ3MAAAAAAAIAAAAAAAAABHVzZXIAAAATAAAAAAAAAAJpZAAAAAAAEAAAAAEAAAAL" ]),
       options
     )
   }
@@ -248,6 +249,6 @@ export class Client extends ContractClient {
         init: this.txFromJSON<null>,
         upgrade: this.txFromJSON<null>,
         invest: this.txFromJSON<null>,
-        distribute_payout: this.txFromJSON<null>
+        claim_earnings: this.txFromJSON<i128>
   }
 }

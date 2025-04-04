@@ -41,7 +41,7 @@ type Mutation {
   withdrawToExternalWallet(address: String!, amount: Int!): Boolean!
   initContract: InitContractResult!
   submitLink(link: String!, email: String!): SubmitLinkResponse!
-  distributePayouts: Boolean!
+  claimEarnings: ClaimEarningsResponse!
 }
 
 type PaymentIntentResponse {
@@ -191,5 +191,16 @@ type Asset {
 type SubmitLinkResponse {
     message: String!
     success: Boolean!
+}
+
+type ClaimEarningsResponse {
+    success: Boolean!
+    totalClaimedAmount: Float!
+    claimedEntries: [ClaimedEntry!]!
+}
+
+type ClaimedEntry {
+    entryId: String!
+    amount: Float!
 }
 `;

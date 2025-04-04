@@ -16,9 +16,9 @@ import { withdrawToExternalAddressResolver } from './withdraw-to-external-wallet
 import { processEntryResolver } from './process-entry';
 import { initContractResolver } from './init-contract';
 import { submitLinkResolver } from './submit-link';
-import { distributePayouts } from './distribute-payouts';
 import { createPaymentIntentResolver } from './create-payment-intent';
 import { checkPendingWithdrawalsResolver } from './check-pending-withdrawals';
+import { claimEarningsResolver } from './claim-earnings';
 
 const Query = {
 	entry: entryByIdResolver,
@@ -33,7 +33,6 @@ const Mutation = {
 	checkPendingWithdrawals: checkPendingWithdrawalsResolver,
 	createPaymentIntent: createPaymentIntentResolver,
 	createUserWithEmail: createUserWithEmailResolver,
-	distributePayouts: distributePayouts,
 	initContract: initContractResolver,
 	investEntry: investEntryResolver,
 	likeEntry: likeEntryResolver,
@@ -43,6 +42,7 @@ const Mutation = {
 	setLastPlayedEntry: setLastPlayedEntryResolver,
 	signInWithToken: signInWithTokenResolver,
 	submitLink: submitLinkResolver,
+	claimEarnings: claimEarningsResolver,
 	updateUser: updateUserResolver,
 	withdrawToExternalWallet: withdrawToExternalAddressResolver,
 };
