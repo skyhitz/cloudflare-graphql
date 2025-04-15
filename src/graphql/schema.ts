@@ -84,6 +84,7 @@ type User {
   managed: Boolean!
   twitter: String
   instagram: String
+  claimEarnings: ClaimEarningsResponse
 }
 
 type Entry {
