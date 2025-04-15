@@ -3,10 +3,12 @@ import { Context } from 'src/util/types';
 import ContractClient from '../../contract';
 import { AlgoliaClient } from 'src/algolia/algolia';
 import { requireAuth } from 'src/auth/auth-context';
+import Encryption from 'src/util/encryption';
 
 export const claimEarningsResolver = async (_: any, __: any, context: Context) => {
 	const algolia = new AlgoliaClient(context.env);
 	const user = await requireAuth(context);
+	const encryption = new Encryption(context.env);
 
 	const contractClient = new ContractClient(context.env);
 
@@ -17,7 +19,7 @@ export const claimEarningsResolver = async (_: any, __: any, context: Context) =
 	for (let i = 0; i < entries.length; i++) {
 		const entry = entries[i];
 		try {
-			const result = await contractClient.claimEarnings(user.publicKey, entry.entryId);
+			const result = await contractClient.claimEarnings(user.publicKey, entry.entryId, await encryption.decrypt(user.seed));
 
 			// Add the claimed amount to our running total
 			if (result && result.claimedAmount) {
