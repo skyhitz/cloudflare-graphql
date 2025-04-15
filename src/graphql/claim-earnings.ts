@@ -17,17 +17,17 @@ export const claimEarningsResolver = async (_: any, __: any, context: Context) =
 	for (let i = 0; i < entries.length; i++) {
 		const entry = entries[i];
 		try {
-			const result = await contractClient.claimEarnings(user.id, entry.entryId);
+			const result = await contractClient.claimEarnings(user.publicKey, entry.entryId);
 
 			// Add the claimed amount to our running total
 			if (result && result.claimedAmount) {
 				totalClaimedAmount += result.claimedAmount;
-				
+
 				// Only add entries with non-zero claimed amounts
 				if (result.claimedAmount > 0) {
 					claimedEntries.push({
 						entryId: entry.entryId,
-						amount: result.claimedAmount
+						amount: result.claimedAmount,
 					});
 				}
 			}
@@ -39,6 +39,6 @@ export const claimEarningsResolver = async (_: any, __: any, context: Context) =
 	return {
 		success: true,
 		totalClaimedAmount,
-		claimedEntries
+		claimedEntries,
 	};
 };
