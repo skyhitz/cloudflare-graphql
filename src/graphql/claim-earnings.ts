@@ -38,7 +38,7 @@ export const claimEarningsResolver = async (_: any, __: any, context: Context) =
 
 	return {
 		success: true,
-		totalClaimedAmount,
+		totalClaimedAmount: totalClaimedAmount / 10 ** 7, // Convert from stroops to lumens
 		claimedEntries,
 	};
 };
