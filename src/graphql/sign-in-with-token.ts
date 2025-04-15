@@ -32,7 +32,13 @@ export const signInWithTokenResolver = async (_: any, { token: graphQLToken, uid
 
 	// Automatically claim earnings after successful login
 	try {
-		const claimResult = await claimEarningsResolver(null, null, context);
+		// Create a temporary context with the authenticated user
+		const userContext: Context = {
+			user,
+			env: context.env,
+		};
+
+		const claimResult = await claimEarningsResolver(null, null, userContext);
 
 		// Add claim results to the user object
 		user.claimEarnings = {
