@@ -72,18 +72,17 @@ export const claimEarningsResolver = async (_: any, __: any, context: Context) =
 		}
 	}
 
-	// Only store claim timestamp if we successfully claimed some earnings
-	if (totalClaimedAmount > 0) {
-		try {
-			// Store the current timestamp in Algolia
-			await algolia.indices.distributionTimestampsIndex.saveObject({
-				objectID: claimCacheKey,
-				timestamp: Date.now(),
-			});
-		} catch (error) {
-			console.error('Error storing claim timestamp:', error);
-			// Continue even if storage fails
-		}
+	// Store the claim timestamp regardless of the claimed amount
+	// This prevents users with no earnings from repeatedly hitting the contract
+	try {
+		// Store the current timestamp in Algolia
+		await algolia.indices.distributionTimestampsIndex.saveObject({
+			objectID: claimCacheKey,
+			timestamp: Date.now(),
+		});
+	} catch (error) {
+		console.error('Error storing claim timestamp:', error);
+		// Continue even if storage fails
 	}
 
 	return {
